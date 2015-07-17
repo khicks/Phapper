@@ -10,13 +10,130 @@ require_once('inc/live.php');
 class Phapper {
     private $config;
     private $oauth2;
+    private $user_id;
 
     public function __construct() {
         $this->config = new Config();
         $this->oauth2 = new OAuth2($this->config);
     }
 
+    //-----------------------------------------
+    // Account
+    //-----------------------------------------
+    public function getMe() {
+        $response = $this->apiCall("/api/v1/me");
 
+        if (!isset($response->id)) {
+            return null;
+        }
+
+        $this->user_id = $response->id;
+        return $response;
+    }
+
+    public function getMyKarmaBreakdown() {
+        $response = $this->apiCall("/api/v1/me/karma");
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    public function getMyPrefs() {
+        $response = $this->apiCall("/api/v1/me/prefs");
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    public function getMyTrophies() {
+        $response = $this->apiCall("/api/v1/me/trophies");
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response->data->trophies;
+    }
+
+    public function getMyFriends() {
+        $response = $this->apiCall("/api/v1/me/friends");
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    public function getBlockedUsers() {
+        $response = $this->apiCall("/api/v1/me/blocked");
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    //-----------------------------------------
+    // Flair
+    //-----------------------------------------
+
+    //-----------------------------------------
+    // reddit gold
+    //-----------------------------------------
+
+    //-----------------------------------------
+    // Links & comments
+    //-----------------------------------------
+    public function comment($parent, $text, $distinguish = false) {
+        $params = array(
+            'api_type' => 'json',
+            'text' => $text,
+            'thing_id' => $parent
+        );
+
+        $response = $this->apiCall("/api/comment", 'POST', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        $id = $response->json->data->things[0]->data->name;
+        if ($distinguish) {
+            $this->distinguish($id, true);
+        }
+
+        return $id;
+    }
+
+    public function delete($thing_id) {
+        $params = array(
+            'id' => $thing_id
+        );
+
+        $response = $this->apiCall("/api/del", 'POST', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    //-----------------------------------------
+    // Listings
+    //-----------------------------------------
+
+    //-----------------------------------------
+    // Live threads
+    //-----------------------------------------
     public function createLiveThread($title, $description = null, $resources = null, $nsfw = false) {
         $params = array(
             'api_type' => 'json',
@@ -33,6 +150,53 @@ class Phapper {
         }
         return null;
     }
+
+    public function attachLiveThread($thread_id) {
+        return new Live($this, $thread_id);
+    }
+
+    //-----------------------------------------
+    // Private messages
+    //-----------------------------------------
+
+    //-----------------------------------------
+    // Moderation
+    //-----------------------------------------
+
+    //-----------------------------------------
+    // Multis
+    //-----------------------------------------
+
+    //-----------------------------------------
+    // Search
+    //-----------------------------------------
+
+    //-----------------------------------------
+    // Subreddits
+    //-----------------------------------------
+    public function distinguish($thing_id, $how = true) {
+        $params = array(
+            'api_type' => 'json',
+            'how' => ($how) ? 'yes':'no',
+            'id' => $thing_id
+        );
+
+        $response = $this->apiCall("/api/distinguish", 'POST', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    //-----------------------------------------
+    // Users
+    //-----------------------------------------
+
+    //-----------------------------------------
+    // Wiki
+    //-----------------------------------------
 
     public function apiCall($path, $method = 'GET', $params = null) {
         $url = $this->config->base_url.$path;
