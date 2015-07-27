@@ -64,24 +64,4 @@ class OAuth2 {
         $this->expiration = time()+$response->expires_in;
         $this->scope = $response->scope;
     }
-
-    private function doSomething() {
-        $url = $this->config->base_url."/r/rotorcowboy/hot.json";
-
-        $options[CURLOPT_USERAGENT] = $this->config->user_agent;
-        $options[CURLOPT_RETURNTRANSFER] = true;
-        $options[CURLOPT_CONNECTTIMEOUT] = 5;
-        $options[CURLOPT_TIMEOUT] = 10;
-        $options[CURLOPT_HTTPHEADER] = array(
-            "Authorization: $this->token_type $this->access_token"
-        );
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, $options);
-        $response_raw = curl_exec($ch);
-        $response = json_decode($response_raw);
-        curl_close($ch);
-
-        var_dump($response);
-    }
 }
