@@ -110,6 +110,321 @@ class Phapper {
     //-----------------------------------------
     // Flair
     //-----------------------------------------
+    /**
+     * Retrieves a list of all assigned user flair in the specified subreddit.
+     * @param string $subreddit Name of subreddit from which to retrieve flair list.
+     * @param int $limit Upper limit of number of items to retrieve. Upper limit is 1000.
+     * @param null $after Use 'next' attribute of previous call to retrieve next page.
+     * @param null $before Retrieve only flairs that are higher than this user ID on the list.
+     * @return mixed|null
+     */
+    public function getUserFlairList($subreddit, $limit = 25, $after = null, $before = null) {
+        $params = array(
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'show' => 'all'
+        );
+
+        $response = $this->apiCall("/r/$subreddit/api/flairlist.json", 'GET', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Adds or modifies a flair template in a subreddit.
+     * @param string $subreddit Name of subreddit to add flair template.
+     * @param string $type Specifies user or link flair template. One of 'link' or 'user'.
+     * @param null $text Flair text.
+     * @param null $css_class Flair CSS class.
+     * @param bool|false $editable Whether or not to allow users to edit the flair's text when assigning it.
+     * @param null $template_id The template ID of an existing flair to modify. If null, will add a new one.
+     * @return mixed|null Returns response to API call on success. Null if failed.
+     */
+    public function addFlairTemplate($subreddit, $type, $text = null, $css_class = null, $editable = false, $template_id = null) {
+        $params = array(
+            'api_type' => 'json',
+            'css_class' => $css_class,
+            'flair_template_id' => $template_id,
+            'flair_type' => ($type=='link') ? 'LINK_FLAIR' : 'USER_FLAIR',
+            'text' => $text,
+            'text_editable' => ($editable) ? 'true' : 'false'
+        );
+
+        $response = $this->apiCall("/r/$subreddit/api/flairtemplate", 'POST', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Deletes all flair templates of the selected type from the selected subreddit.
+     * @param string $subreddit Subreddit of flairs to clear.
+     * @param string $type One of 'user' or 'link'.
+     * @return mixed|null Returns result of API call on success. Null if failed or incorrect type.
+     */
+    public function clearFlairTemplates($subreddit, $type) {
+        if ($type !== 'user' && $type !== 'link') {
+            return null;
+        }
+
+        $params = array(
+            'api_type' => 'json',
+            'flair_type' => $type
+        );
+
+        $response = $this->apiCall("/r/$subreddit/api/clearflairtemplates", 'POST', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Deletes the selected flair template from the specified subreddit.
+     * @param string $subreddit Subreddit from which to delete flair template.
+     * @param string $template_id ID of template to delete.
+     * @return mixed|null Returns result of API call on success. Null if failed.
+     */
+    public function deleteFlairTemplate($subreddit, $template_id) {
+        $params = array(
+            'api_type' => 'json',
+            'flair_template_id' => $template_id
+        );
+
+        $response = $this->apiCall("/r/$subreddit/api/deleteflairtemplate", 'POST', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Deletes a user's flair from the specified subreddit.
+     * @param string $subreddit Subreddit in which to delete user flair.
+     * @param string $user Username of user whose flair to delete.
+     * @return mixed|null Returns result of API call on success. Null if failed.
+     */
+    public function deleteUserFlair($subreddit, $user) {
+        $params = array(
+            'api_type' => 'json',
+            'name' => $user
+        );
+
+        $response = $this->apiCall("/r/$subreddit/api/deleteflair", 'POST', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Gets current flair and a list of possible flairs for the specified user in the specified subreddit.
+     * Also useful for obtaining flair ID's.
+     * @param string $subreddit Subreddit in which to view flair options.
+     * @param string|null $user Username for whom to view selection. Defaults to current user.
+     * @return mixed Returns API response.
+     */
+    public function getUserFlairSelector($subreddit, $user = null) {
+        $params = array(
+            'name' => $user,
+        );
+
+        $response = $this->apiCall("/r/$subreddit/api/flairselector", 'POST', $params);
+
+        return $response;
+    }
+
+    /**
+     * Gets current flair and a list of possible flairs for the specified link.
+     * @param string $thing_id Thing ID of object to view flairs.
+     * @return mixed|null Returns API response on success. Null if failed.
+     */
+    public function getLinkFlairSelector($thing_id) {
+        $params = array(
+            'link' => $thing_id
+        );
+
+        $response = $this->apiCall("/api/flairselector", 'POST', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Selects a user flair to use from the flair selection list.
+     * @param string $subreddit Subreddit in which to select flair.
+     * @param string $user Username of user to whom to apply flair. Mandatory, don't ask me why.
+     * @param string|null $template_id Template ID of template to select. Null will remove the user's flair.
+     * @param string|null $text Modified flair text, if allowed.
+     * @return mixed|null Returns API response on success. Null if failed.
+     */
+    public function selectUserFlair($subreddit, $user, $template_id = null, $text = null) {
+        $params = array(
+            'api_type' => 'json',
+            'flair_template_id' => $template_id,
+            'name' => $user,
+            'text' => $text
+        );
+
+        $response = $this->apiCall("/r/$subreddit/api/selectflair", 'POST', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Applies a link flair template from the selection list to a link.
+     * @param string $thing_id Thing ID of link to apply flair.
+     * @param string|null $template_id Template ID of template to apply to link. Null will remove the link's flair.
+     * @param string|null $text Modified flair text, if allowed.
+     * @return mixed|null Returns API response on success. Null if failed.
+     */
+    public function selectLinkFlair($thing_id, $template_id = null, $text = null) {
+        $params = array(
+            'api_type' => 'json',
+            'flair_template_id' => $template_id,
+            'link' => $thing_id,
+            'text' => $text
+        );
+
+        $response = $this->apiCall("/api/selectflair", 'POST', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Assigns the selected user custom flair text and CSS class in the specified subreddit. Mods only.
+     * @param string $subreddit Subreddit in which to assign flair.
+     * @param string $user Username of user to assign flair.
+     * @param string|null $text Custom flair text.
+     * @param string|null $css_class Custom flair CSS class. If both fields are null, deletes flair.
+     * @return mixed|null Returns API response on success. Null if failed.
+     */
+    public function assignUserFlair($subreddit, $user, $text = null, $css_class = null) {
+        $params = array(
+            'api_type' => 'json',
+            'css_class' => $css_class,
+            'name' => $user,
+            'text' => $text
+        );
+
+        $response = $this->apiCall("/r/$subreddit/api/flair", 'POST', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Assigns the selected link custom flair text and CSS class in the specified subreddit. Mods only.
+     * @param string $subreddit Subreddit in which to assign flair. Mandatory, don't ask me why.
+     * @param string $thing_id Thing ID of link to assign flair.
+     * @param string|null $text Custom flair text.
+     * @param string|null $css_class Custom flair CSS class. If both fields are null, deletes flair.
+     * @return mixed|null Returns API response on success. Null if failed.
+     */
+    public function assignLinkFlair($subreddit, $thing_id, $text = null, $css_class = null) {
+        $params = array(
+            'api_type' => 'json',
+            'css_class' => $css_class,
+            'link' => $thing_id,
+            'text' => $text
+        );
+
+        $response = $this->apiCall("/r/$subreddit/api/flair", 'POST', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Selects whether or not to show the current user's flair in the selected subreddit.
+     * @param string $subreddit Subreddit in which to enable or disable flair.
+     * @param bool|true $show True to show flair. False to hide flair.
+     * @return mixed|null Returns API response on success. Null if failed.
+     */
+    public function showMyFlair($subreddit, $show = true) {
+        $params = array(
+            'api_type' => 'json',
+            'flair_enabled' => ($show) ? 'true' : 'false'
+        );
+
+        $response = $this->apiCall("/r/$subreddit/api/setflairenabled", 'POST', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Updates all options in a subreddit's flair configuration.
+     * @param string $subreddit Subreddit in which to configure flair.
+     * @param boolean $user_enabled Whether or not user flair is displayed.
+     * @param string $user_position On which side to display user flair. One of 'left' or 'right'.
+     * @param boolean $user_self_assign Whether or not users can select their own user flair.
+     * @param string $link_position On which side to display links' flair. One of 'left', 'right', or 'none'.
+     * @param boolean $link_self_assign Whether or not users can select their own links' flair.
+     * @return mixed|null Returns API response on success. Null if failed.
+     */
+    public function configureSubredditFlair($subreddit, $user_enabled, $user_position, $user_self_assign, $link_position, $link_self_assign) {
+        if (!($user_position == 'left' || $user_position == 'right') || !(is_null($link_position) || $link_position == 'none' || $link_position == 'left' || $link_position == 'right')) {
+            return null;
+        }
+
+        if ($link_position == 'none') {
+            $link_position = null;
+        }
+
+        $params = array(
+            'api_type' => 'json',
+            'flair_enabled' => ($user_enabled) ? 'true' : 'false',
+            'flair_position' => $user_position,
+            'flair_self_assign_enabled' => ($user_self_assign) ? 'true' : 'false',
+            'link_flair_position' => $link_position,
+            'link_flair_self_assign_enabled' => ($link_self_assign) ? 'true' : 'false'
+        );
+
+        $response = $this->apiCall("/r/$subreddit/api/flairconfig", 'POST', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+
+    }
+
 
     //-----------------------------------------
     // reddit gold
@@ -479,10 +794,96 @@ class Phapper {
     //-----------------------------------------
     // Listings
     //-----------------------------------------
+    /**
+     * Private function to unify process of retrieving several subreddit listings.
+     * @param string $listing Listing type. Can be hot, new, controversial, top, gilded, ads.
+     * @param string $subreddit
+     * @param string $limit
+     * @param string $after
+     * @param string $before
+     * @param string|null $time
+     * @return mixed|null
+     */
+    private function getSubredditListing($listing, $subreddit, $limit, $after, $before, $time = null) {
+        $params = array(
+            't' => $time,
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'show' => 'all'
+        );
+        $api_sr = ($subreddit) ? "/r/$subreddit" : "";
+
+        $response = $this->apiCall("$api_sr/$listing.json", 'GET', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response->data;
+    }
+
+    /**
+     * Retrieves the hot listing for the optionally specified subreddit.
+     * @param string|null $subreddit Subreddit of listing to retrieve. If none, defaults to front page.
+     * @param string|int $limit Upper limit of number of items to retrieve. Maxiumum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return mixed|null Returns listing object on success. Null if failed.
+     */
+    public function getHot($subreddit = null, $limit = 25, $after = null, $before = null) {
+        return $this->getSubredditListing('hot', $subreddit, $limit, $after, $before);
+    }
+
+    /**
+     * Retrieves the new listing for the optionally specified subreddit.
+     * @param string|null $subreddit Subreddit of listing to retrieve. If none, defaults to front page.
+     * @param string|int $limit Upper limit of number of items to retrieve. Maxiumum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return mixed|null Returns listing object on success. Null if failed.
+     */
+    public function getNew($subreddit = null, $limit = 25, $after = null, $before = null) {
+        return $this->getSubredditListing('new', $subreddit, $limit, $after, $before);
+    }
+
+    /**
+     * Retrieves the controversial listing for the optionally specified subreddit.
+     * @param string|null $subreddit Subreddit of listing to retrieve. If none, defaults to front page.
+     * @param string $time Time constraint for age of items on list. One of hour, day, week, month, year, all.
+     * @param string|int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return mixed|null Returns listing object on success. Null if failed.
+     */
+    public function getControversial($subreddit = null, $time = 'all', $limit = 25, $after = null, $before = null) {
+        return $this->getSubredditListing('controversial', $subreddit, $limit, $after, $before, $time);
+    }
+
+    /**
+     * Retrieves the top listing for the optionally specified subreddit.
+     * @param string|null $subreddit Subreddit of listing to retrieve. If none, defaults to front page.
+     * @param string $time Time constraint for age of items on list. One of hour, day, week, month, year, all.
+     * @param string|int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return mixed|null Returns listing object on success. Null if failed.
+     */
+    public function getTop($subreddit = null, $time = 'all', $limit = 25, $after = null, $before = null) {
+        return $this->getSubredditListing('top', $subreddit, $limit, $after, $before, $time);
+    }
 
     //-----------------------------------------
     // Live threads
     //-----------------------------------------
+    /**
+     * Creates a new Live thread. To use an existing one, use attachLiveThread().
+     * @param string $title The thread's title.
+     * @param null $description The thread's description.
+     * @param null $resources The thread's list of resources.
+     * @param bool|false $nsfw Whether or not the thread is NSFW.
+     * @return null|Live Returns a Live thread object on success. Null if failed.
+     */
     public function createLiveThread($title, $description = null, $resources = null, $nsfw = false) {
         $params = array(
             'api_type' => 'json',
@@ -500,6 +901,11 @@ class Phapper {
         return null;
     }
 
+    /**
+     * Uses an existing Live thread to create a Live object.
+     * @param string $thread_id Thread ID of the thread to attach.
+     * @return Live Returns the resulting Live object.
+     */
     public function attachLiveThread($thread_id) {
         return new Live($this, $thread_id);
     }
@@ -1282,6 +1688,36 @@ class Phapper {
         }
 
         return $response->data;
+    }
+
+    /**
+     * Retrieve a list of the subreddit's settings.
+     * @param string $subreddit The subreddit to retrieve.
+     * @return mixed|null An object with subreddit settings as properties. Null if failed.
+     */
+    public function getSubredditSettings($subreddit) {
+        $response = $this->apiCall("/r/$subreddit/about/edit.json");
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response->data;
+    }
+
+    /**
+     * Retrieves the "submitting to /r/$subreddit" text for the selected subreddit.
+     * @param string $subreddit Name of subreddit to use.
+     * @return string|null Returns a string of the subreddit's submit_text. 0-length string if none, null if failed.
+     */
+    public function getSubmitText($subreddit) {
+        $response = $this->apiCall("/r/$subreddit/api/submit_text");
+
+        if (!isset($response->submit_text)) {
+            return null;
+        }
+
+        return $response->submit_text;
     }
 
     //-----------------------------------------
