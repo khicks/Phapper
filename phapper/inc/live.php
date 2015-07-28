@@ -4,7 +4,7 @@ namespace Phapper;
 
 
 class Live {
-    /** @var $phapper Phapper */
+    /** @var Phapper */
     private $phapper;
     private $thread_id;
 

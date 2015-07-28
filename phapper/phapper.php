@@ -4,17 +4,30 @@ namespace Phapper;
 
 require_once('config.php');
 require_once('inc/oauth2.php');
+require_once('inc/ratelimiter.php');
 require_once('inc/live.php');
 
 
 class Phapper {
-    private $config;
+    /** @var OAuth2 */
     private $oauth2;
-    private $user_id;
 
-    public function __construct() {
-        $this->config = new Config();
-        $this->oauth2 = new OAuth2($this->config);
+    /** @var RateLimiter */
+    public $ratelimiter;
+
+    private $user_agent;
+    private $endpoint;
+
+    public function __construct($auth_type = 'oauth', $username = REDDIT_USERNAME, $password = REDDIT_PASSWORD, $app_id = REDDIT_APP_ID, $app_secret = REDDIT_APP_SECRET, $user_agent = PHAPPER_USER_AGENT, $endpoint = PHAPPER_OAUTH_ENDPOINT) {
+        if ($auth_type == 'oauth') {
+            $this->oauth2 = new OAuth2($username, $password, $app_id, $app_secret, $user_agent);
+            $this->ratelimiter = new RateLimiter(true, 1);
+        } elseif ($auth_type == 'cookie') {
+            return null;
+        }
+
+        $this->user_agent = $user_agent;
+        $this->endpoint = $endpoint;
     }
 
     //-----------------------------------------
@@ -32,7 +45,6 @@ class Phapper {
             return null;
         }
 
-        $this->user_id = $response->id;
         return $response;
     }
 
@@ -1729,15 +1741,14 @@ class Phapper {
     //-----------------------------------------
 
     public function apiCall($path, $method = 'GET', $params = null) {
-        $url = $this->config->base_url.$path;
-        echo $url."\n";
+        $url = $this->endpoint.$path;
 
         $token = $this->oauth2->getAccessToken();
 
         $options[CURLOPT_RETURNTRANSFER] = true;
         $options[CURLOPT_CONNECTTIMEOUT] = 5;
         $options[CURLOPT_TIMEOUT] = 10;
-        $options[CURLOPT_USERAGENT] = $this->config->user_agent;
+        $options[CURLOPT_USERAGENT] = $this->user_agent;
         $options[CURLOPT_CUSTOMREQUEST] = $method;
         $options[CURLOPT_HTTPHEADER] = array(
             "Authorization: ".$token['token_type']." ".$token['access_token']
@@ -1754,6 +1765,10 @@ class Phapper {
 
         $ch = curl_init($url);
         curl_setopt_array($ch, $options);
+
+        $this->ratelimiter->wait();
+        echo $url."\n";
+
         $response_raw = curl_exec($ch);
         $response = json_decode($response_raw);
         curl_close($ch);

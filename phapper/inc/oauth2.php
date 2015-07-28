@@ -4,14 +4,24 @@ namespace Phapper;
 
 
 class OAuth2 {
-    private $config;
     private $access_token;
     private $token_type;
     private $expiration;
     private $scope;
 
-    public function __construct($config) {
-        $this->config = $config;
+    private $username;
+    private $password;
+    private $app_id;
+    private $app_secret;
+    private $user_agent;
+
+    public function __construct($username, $password, $app_id, $app_secret, $user_agent) {
+        $this->username = $username;
+        $this->password = $password;
+        $this->app_id = $app_id;
+        $this->app_secret = $app_secret;
+        $this->user_agent = $user_agent;
+
         $this->requestAccessToken();
     }
 
@@ -30,12 +40,12 @@ class OAuth2 {
         $url = "https://www.reddit.com/api/v1/access_token";
         $params = array(
             'grant_type' => 'password',
-            'username' => $this->config->username,
-            'password' => $this->config->password
+            'username' => $this->username,
+            'password' => $this->password
         );
 
-        $options[CURLOPT_USERAGENT] = $this->config->user_agent;
-        $options[CURLOPT_USERPWD] = $this->config->app_id.':'.$this->config->app_secret;
+        $options[CURLOPT_USERAGENT] = $this->user_agent;
+        $options[CURLOPT_USERPWD] = $this->app_id.':'.$this->app_secret;
         $options[CURLOPT_RETURNTRANSFER] = true;
         $options[CURLOPT_CONNECTTIMEOUT] = 5;
         $options[CURLOPT_TIMEOUT] = 10;
