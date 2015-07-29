@@ -24,7 +24,7 @@ class Live {
         );
         $response = $this->phapper->apiCall("/api/live/$this->thread_id/update", 'POST', $params);
 
-        var_dump($response);
+        return $response;
     }
 
     public function close() {
