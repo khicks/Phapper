@@ -18,6 +18,8 @@ class Phapper {
     private $user_agent;
     private $endpoint;
 
+    private $debug;
+
     public function __construct($auth_type = 'oauth', $username = REDDIT_USERNAME, $password = REDDIT_PASSWORD, $app_id = REDDIT_APP_ID, $app_secret = REDDIT_APP_SECRET, $user_agent = PHAPPER_USER_AGENT, $endpoint = PHAPPER_OAUTH_ENDPOINT) {
         if ($auth_type == 'oauth') {
             $this->oauth2 = new OAuth2($username, $password, $app_id, $app_secret, $user_agent);
@@ -28,6 +30,11 @@ class Phapper {
 
         $this->user_agent = $user_agent;
         $this->endpoint = $endpoint;
+        $this->debug = false;
+    }
+
+    public function setDebug($debug) {
+        $this->debug = $debug;
     }
 
     //-----------------------------------------
@@ -925,6 +932,55 @@ class Phapper {
     //-----------------------------------------
     // Private messages
     //-----------------------------------------
+    /**
+     * Retrieves modmail messages.
+     * @param string $subreddit Subreddit for which to retrieve modmail. 'mod' means all moderated subreddits.
+     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
+     * @param bool|false $messages_read Whether or not to turn off the orangered mail icon. Does not mark each message as read.
+     * @param null $after Retrieve the page of results that come after the specified message ID.
+     * @param null $before Retrieve the page of results that come before the specified message ID.
+     * @return mixed|null Returns listing object on success, null if failed.
+     */
+    public function getModmail($subreddit = 'mod', $limit = 25, $messages_read = false, $after = null, $before = null) {
+        $params = array(
+            'mark' => ($messages_read) ? 'true' : 'false',
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'show' => 'all'
+        );
+
+        $response = $this->apiCall("/r/$subreddit/about/message/inbox/.json", 'GET', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Marks one or more messages as read.
+     * @param string|array $thing_ids Either a comma-separated string of one or more thing ID's, or an array of the same.
+     * @return mixed|null Returns empty object if success, null if failed.
+     */
+    public function markMessageRead($thing_ids) {
+        if (is_array($thing_ids)) {
+            $thing_ids = implode(',', $thing_ids);
+        }
+
+        $params = array(
+            'id' => $thing_ids
+        );
+
+        $response = $this->apiCall("/api/read_message", 'POST', $params);
+
+        if (isset($response->error)) {
+            return null;
+        }
+
+        return $response;
+    }
 
     //-----------------------------------------
     // Moderation
@@ -1767,7 +1823,9 @@ class Phapper {
         curl_setopt_array($ch, $options);
 
         $this->ratelimiter->wait();
-        echo $url."\n";
+        if ($this->debug) {
+            echo $url."\n";
+        }
 
         $response_raw = curl_exec($ch);
         $response = json_decode($response_raw);
