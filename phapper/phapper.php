@@ -937,8 +937,8 @@ class Phapper {
      * @param string $subreddit Subreddit for which to retrieve modmail. 'mod' means all moderated subreddits.
      * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
      * @param bool|false $messages_read Whether or not to turn off the orangered mail icon. Does not mark each message as read.
-     * @param null $after Retrieve the page of results that come after the specified message ID.
-     * @param null $before Retrieve the page of results that come before the specified message ID.
+     * @param string|null $after Retrieve the page of results that come after the specified message ID.
+     * @param string|null $before Retrieve the page of results that come before the specified message ID.
      * @return mixed|null Returns listing object on success, null if failed.
      */
     public function getModmail($subreddit = 'mod', $limit = 25, $messages_read = false, $after = null, $before = null) {
@@ -984,9 +984,9 @@ class Phapper {
 
     /**
      * Sends a message to a user or subreddit.
-     * @param $to Username or subreddit to send to.
-     * @param $subject Subject of message.
-     * @param $body Body of message.
+     * @param string $to Username or subreddit to send to.
+     * @param string $subject Subject of message.
+     * @param string $body Body of message.
      * @param null $from_subreddit Optionally the name of the subreddit from which to send the message.
      */
     public function composeMessage($to, $subject, $body, $from_subreddit = null) {
