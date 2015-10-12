@@ -982,6 +982,25 @@ class Phapper {
         return $response;
     }
 
+    /**
+     * Sends a message to a user or subreddit.
+     * @param $to Username or subreddit to send to.
+     * @param $subject Subject of message.
+     * @param $body Body of message.
+     * @param null $from_subreddit Optionally the name of the subreddit from which to send the message.
+     */
+    public function composeMessage($to, $subject, $body, $from_subreddit = null) {
+        $params = array(
+            'api_type' => 'json',
+            'from_sr' => $from_subreddit,
+            'subject' => $subject,
+            'text' => $body,
+            'to' => $to
+        );
+
+        $response = $this->apiCall("/api/compose", 'POST', $params);
+    }
+
     //-----------------------------------------
     // Moderation
     //-----------------------------------------
