@@ -15,6 +15,7 @@ class Phapper {
     /** @var RateLimiter */
     public $ratelimiter;
 
+    private $user_id;
     private $user_agent;
     private $endpoint;
 
@@ -45,7 +46,14 @@ class Phapper {
      * @return object An object representing the current user.
      */
     public function getMe() {
-        return $this->apiCall("/api/v1/me");
+        $response = $this->apiCall("/api/v1/me");
+
+        //might need the current user ID later, so may as well record it now
+        if (isset($response->id)) {
+            $this->user_id = 't2_'.$response->id;
+        }
+
+        return $response;
     }
 
     /**
@@ -726,7 +734,7 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Listings
+    // Listings (DONE)
     //-----------------------------------------
     /**
      * Private function to unify process of retrieving several subreddit listings.
@@ -755,6 +763,78 @@ class Phapper {
         }
 
         return $response->data;
+    }
+
+    /**
+     * Retrieves a listing of links by their specified thing ID.
+     * @param string $thing_ids Thing ID's of links to retrieve.
+     * @return object A listing of links.
+     */
+    public function getLinksById($thing_ids) {
+        if (is_array($thing_ids)) {
+            $thing_ids = implode(',', $thing_ids);
+        }
+
+        return $this->apiCall("/by_id/$thing_ids");
+    }
+
+    /**
+     * Retrieves a listing of comments and children for a link and optionally a specific comment
+     * @param string $link_id ID36 or fullname of link for comments to fetch.
+     * @param string|null $comment_id Optional, ID36 or fullname of a single comment to fetch with children, much like permalink.
+     * @param int|null $context Number of levels up of parent comments to retrieve. Only applicable to child comments.
+     * @param int|null $depth Depth of child comments to retrieve.
+     * @param int|null $limit Limit of comments to retrieve.
+     * @param string|null $sort How to sort the comments, one of 'confidence', 'top', 'new', 'hot', 'controversial', 'old', 'random', 'qa'
+     * @param bool $show_edits Show edited comments, perhaps? Not well documented by reddit.
+     * @param bool $show_more Include links to show more comments, maybe? Not well documented by reddit.
+     * @return object Listing of link and specified comment(s).
+     */
+    public function getComments($link_id, $comment_id = null, $context = null, $depth = null, $limit = null, $sort = null, $show_edits = false, $show_more = false) {
+        if (strpos($link_id, 't3_') === 0) {
+            $link_id = substr($link_id, 3);
+        }
+
+        if (strpos($comment_id, 't1_') === 0) {
+            $comment_id = substr($comment_id, 3);
+        }
+
+        $params = array(
+            'article' => $link_id,
+            'comment' => $comment_id,
+            'context' => strval($context),
+            'depth' => strval($depth),
+            'limit' => strval($limit),
+            'showedits' => ($show_edits) ? 'true' : 'false',
+            'showmore' => ($show_more) ? 'true' : 'false',
+            'sort' => $sort
+        );
+
+        return $this->apiCall("/comments/$link_id", 'GET', $params);
+    }
+
+    /**
+     * Retrieves the specified link and a listing of other links that are to duplicate destinations.
+     * @param string $thing_id ID36 or fullname of link to check for duplicates.
+     * @param int $limit Limit of duplicate links to retrieve.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of original link and listing of duplicate links.
+     */
+    public function getDuplicateLinks($thing_id, $limit = 25, $after = null, $before = null) {
+        if (strpos($thing_id, 't3_') === 0) {
+            $thing_id = substr($thing_id, 3);
+        }
+
+        $params = array(
+            'after' => $after,
+            'article' => $thing_id,
+            'before' => $before,
+            'limit' => $limit,
+            'show' => 'all'
+        );
+
+        return $this->apiCall("/duplicates/$thing_id", 'GET', $params);
     }
 
     /**
@@ -797,7 +877,7 @@ class Phapper {
     /**
      * Retrieves the top listing for the optionally specified subreddit.
      * @param string|null $subreddit Subreddit of listing to retrieve. If none, defaults to front page.
-     * @param string $time Time constraint for age of items on list. One of hour, day, week, month, year, all.
+     * @param string $time Time constraint for age of items on list. One of 'hour', 'day', 'week', 'month', 'year', 'all'.
      * @param string|int $limit Upper limit of number of items to retrieve. Maximum is 100.
      * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
      * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
@@ -807,8 +887,43 @@ class Phapper {
         return $this->getSubredditListing('top', $subreddit, $limit, $after, $before, $time);
     }
 
+    /**
+     * NOT CURRENTLY SUPPORTED BY REDDIT. HERE ANYWAY IN CASE IT IS IN THE FUTURE.
+     * Retrieves a random link from the optionally specified subreddit. If none, choose from any subreddit.
+     * @param string|null $subreddit Subreddit from which to retrieve a random link.
+     * @return object Who knows? Probably a listing of a single link.
+     */
+    public function getRandom($subreddit = null) {
+        return $this->getSubredditListing('random', $subreddit, null, null, null, null);
+    }
+
+    /**
+     * Retreives a list of links that are the result of a search of the specified link's title.
+     * @param string $thing_id ID36 or fullname of link to search with.
+     * @param int $limit Upper limit of the number of links to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of original link and listing of related links.
+     */
+    public function getRelatedLinks($thing_id, $limit = 25, $after = null, $before = null) {
+        if (strpos($thing_id, 't3_') === 0) {
+            $thing_id = substr($thing_id, 3);
+        }
+
+        $params = array(
+            'after' => $after,
+            'article' => $thing_id,
+            'before' => $before,
+            'limit' => $limit,
+            'show' => 'all'
+        );
+
+        return $this->apiCall("/related/$thing_id", 'GET', $params);
+    }
+
     //-----------------------------------------
     // Live threads
+    // TODO
     //-----------------------------------------
     /**
      * Creates a new Live thread. To use an existing one, use attachLiveThread().
@@ -848,53 +963,52 @@ class Phapper {
     // Private messages
     //-----------------------------------------
     /**
-     * Retrieves modmail messages.
-     * @param string $subreddit Subreddit for which to retrieve modmail. 'mod' means all moderated subreddits.
-     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
-     * @param bool|false $messages_read Whether or not to turn off the orangered mail icon. Does not mark each message as read.
-     * @param string|null $after Retrieve the page of results that come after the specified message ID.
-     * @param string|null $before Retrieve the page of results that come before the specified message ID.
-     * @return mixed|null Returns listing object on success, null if failed.
+     * Block a user based on the thing ID of a *message* they sent you. Does not work directly on user objects.
+     * @param string $thing_id Thing ID of message that the user to block sent you.
+     * @return object Response to API call, probably empty.
      */
-    public function getModmail($subreddit = 'mod', $limit = 25, $messages_read = false, $after = null, $before = null) {
+    public function blockByMessage($thing_id) {
         $params = array(
-            'mark' => ($messages_read) ? 'true' : 'false',
-            'after' => $after,
-            'before' => $before,
-            'limit' => $limit,
-            'show' => 'all'
+            'id' => $thing_id
         );
 
-        $response = $this->apiCall("/r/$subreddit/about/message/inbox/.json", 'GET', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/api/unblock_subreddit", 'POST', $params);
     }
 
     /**
-     * Marks one or more messages as read.
-     * @param string|array $thing_ids Either a comma-separated string of one or more thing ID's, or an array of the same.
-     * @return mixed|null Returns empty object if success, null if failed.
+     * CURRENTLY NOT SUPPORTED WITH OAUTH.
+     * Collapse one or more messages in modmail.
+     * @param string|array $thing_ids Comma-separated or array of thing ID's of messages to collapse.
+     * @return object Undetermined.
      */
-    public function markMessageRead($thing_ids) {
+    public function collapseMessage($thing_ids) {
         if (is_array($thing_ids)) {
-            $thing_ids = implode(',', $thing_ids);
+            $thing_ids = explode(',', $thing_ids);
         }
 
         $params = array(
             'id' => $thing_ids
         );
 
-        $response = $this->apiCall("/api/read_message", 'POST', $params);
+        return $this->apiCall("/api/collapse_message", 'POST', $params);
+    }
 
-        if (isset($response->error)) {
-            return null;
+    /**
+     * CURRENTLY NOT SUPPORTED WITH OAUTH.
+     * Uncollapse one or more messages in modmail.
+     * @param string|array $thing_ids Comma-separated or array of thing ID's of messages to uncollapse.
+     * @return object Undetermined.
+     */
+    public function uncollapseMessage($thing_ids) {
+        if (is_array($thing_ids)) {
+            $thing_ids = explode(',', $thing_ids);
         }
 
-        return $response;
+        $params = array(
+            'id' => $thing_ids
+        );
+
+        return $this->apiCall("/api/uncollapse_message", 'POST', $params);
     }
 
     /**
@@ -902,7 +1016,8 @@ class Phapper {
      * @param string $to Username or subreddit to send to.
      * @param string $subject Subject of message.
      * @param string $body Body of message.
-     * @param null $from_subreddit Optionally the name of the subreddit from which to send the message.
+     * @param string|null $from_subreddit Optionally the name of the subreddit from which to send the message.
+     * @return object Response to API call.
      */
     public function composeMessage($to, $subject, $body, $from_subreddit = null) {
         $params = array(
@@ -913,7 +1028,138 @@ class Phapper {
             'to' => $to
         );
 
-        $response = $this->apiCall("/api/compose", 'POST', $params);
+        return $this->apiCall("/api/compose", 'POST', $params);
+    }
+
+    /**
+     * Queues a job for all of your messages to be marked as read.
+     * @return string Raw body response from reddit since it's not in JSON.
+     */
+    public function markAllMessagesAsRead() {
+        $params = array(); //needed, or reddit returns a 400 error
+        return $this->apiCall("/api/read_all_messages", 'POST', $params);
+    }
+
+    /**
+     * Marks one or more messages as read.
+     * @param string|array $thing_ids A comma-separated string or array of one or more message thing ID's (t4_).
+     * @return object Response to API call, probably empty.
+     */
+    public function markMessageRead($thing_ids) {
+        if (is_array($thing_ids)) {
+            $thing_ids = implode(',', $thing_ids);
+        }
+
+        $params = array(
+            'id' => $thing_ids
+        );
+
+        return $this->apiCall("/api/read_message", 'POST', $params);
+    }
+
+    /**
+     * Marks one or more messages as unread.
+     * @param string|array $thing_ids A comma-separated string or array of one or more message thing ID's (t4_).
+     * @return object Response to API call, probably empty.
+     */
+    public function markMessageUnread($thing_ids) {
+        if (is_array($thing_ids)) {
+            $thing_ids = implode(',', $thing_ids);
+        }
+
+        $params = array(
+            'id' => $thing_ids
+        );
+
+        return $this->apiCall("/api/unread_message", 'POST', $params);
+    }
+
+    /**
+     * Unblock a subreddit using a message they sent you.
+     * @param string $thing_id Thing ID of a message sent by the subreddit to unblock.
+     * @return object Response to API call.
+     */
+    public function unblockSubredditByMessage($thing_id) {
+        $params = array(
+            'id' => $thing_id
+        );
+
+        return $this->apiCall("/api/unblock_subreddit", 'POST', $params);
+    }
+
+    /**
+     * Retrieves the current user's personal message inbox.
+     * @param int $limit Upper limit of the number of links to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of messages in user's inbox.
+     */
+    public function getInbox($limit = 25, $after = null, $before = null) {
+        $params = array(
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'show' => 'all'
+        );
+
+        return $this->apiCall("/message/inbox/.json", 'GET', $params);
+    }
+
+    /**
+     * Retrieves the current user's unread personal messages.
+     * @param int $limit Upper limit of the number of links to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of unread messages in user's inbox.
+     */
+    public function getUnread($limit = 25, $after = null, $before = null) {
+        $params = array(
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'show' => 'all'
+        );
+
+        return $this->apiCall("/message/unread/.json", 'GET', $params);
+    }
+
+    /**
+     * Retrieves the current user's sent personal messages.
+     * @param int $limit Upper limit of the number of links to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of unread messages in user's inbox.
+     */
+    public function getSent($limit = 25, $after = null, $before = null) {
+        $params = array(
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'show' => 'all'
+        );
+
+        return $this->apiCall("/message/sent/.json", 'GET', $params);
+    }
+
+    /**
+     * Retrieves modmail messages.
+     * @param string $subreddit Subreddit for which to retrieve modmail. 'mod' means all moderated subreddits.
+     * @param bool $messages_read Whether or not to turn off the orangered mail icon. Does not mark each message as read.
+     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of modmail messages.
+     */
+    public function getModmail($subreddit = 'mod', $messages_read = false, $limit = 25, $after = null, $before = null) {
+        $params = array(
+            'mark' => ($messages_read) ? 'true' : 'false',
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'show' => 'all'
+        );
+
+        return $this->apiCall("/r/$subreddit/about/message/inbox/.json", 'GET', $params);
     }
 
     //-----------------------------------------
@@ -1736,6 +1982,19 @@ class Phapper {
     //-----------------------------------------
     // Users
     //-----------------------------------------
+    public function unblockUser($user) {
+        while (!isset($this->user_id)) {
+            $this->getMe();
+        }
+
+        $params = array(
+            'container' => $this->user_id,
+            'name' => $user,
+            'type' => 'enemy'
+        );
+
+        return $this->apiCall("/api/unfriend", 'POST', $params);
+    }
 
     //-----------------------------------------
     // Wiki
@@ -1773,8 +2032,12 @@ class Phapper {
         }
 
         $response_raw = curl_exec($ch);
-        $response = json_decode($response_raw);
         curl_close($ch);
+
+        $response = json_decode($response_raw);
+        if ($json_error = json_last_error()) {
+            $response = $response_raw;
+        }
 
         return $response;
     }
