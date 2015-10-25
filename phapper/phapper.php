@@ -840,7 +840,7 @@ class Phapper {
     /**
      * Retrieves the hot listing for the optionally specified subreddit.
      * @param string|null $subreddit Subreddit of listing to retrieve. If none, defaults to front page.
-     * @param string|int $limit Upper limit of number of items to retrieve. Maxiumum is 100.
+     * @param int $limit Upper limit of number of items to retrieve. Maxiumum is 100.
      * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
      * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
      * @return mixed|null Returns listing object on success. Null if failed.
@@ -852,7 +852,7 @@ class Phapper {
     /**
      * Retrieves the new listing for the optionally specified subreddit.
      * @param string|null $subreddit Subreddit of listing to retrieve. If none, defaults to front page.
-     * @param string|int $limit Upper limit of number of items to retrieve. Maxiumum is 100.
+     * @param int $limit Upper limit of number of items to retrieve. Maxiumum is 100.
      * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
      * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
      * @return mixed|null Returns listing object on success. Null if failed.
@@ -865,7 +865,7 @@ class Phapper {
      * Retrieves the controversial listing for the optionally specified subreddit.
      * @param string|null $subreddit Subreddit of listing to retrieve. If none, defaults to front page.
      * @param string $time Time constraint for age of items on list. One of hour, day, week, month, year, all.
-     * @param string|int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
      * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
      * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
      * @return mixed|null Returns listing object on success. Null if failed.
@@ -878,7 +878,7 @@ class Phapper {
      * Retrieves the top listing for the optionally specified subreddit.
      * @param string|null $subreddit Subreddit of listing to retrieve. If none, defaults to front page.
      * @param string $time Time constraint for age of items on list. One of 'hour', 'day', 'week', 'month', 'year', 'all'.
-     * @param string|int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
      * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
      * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
      * @return mixed|null Returns listing object on success. Null if failed.
@@ -960,7 +960,7 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Private messages
+    // Private messages (DONE)
     //-----------------------------------------
     /**
      * Block a user based on the thing ID of a *message* they sent you. Does not work directly on user objects.
@@ -1163,7 +1163,18 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Moderation
+    // Misc (DONE)
+    //-----------------------------------------
+    /**
+     * Retrieve a list of all of reddit's OAuth2 scopes.
+     * @return object Contains several objects representing each OAuth2 scope
+     */
+    public function getOAuthScopes() {
+        return $this->apiCall("/api/v1/scopes");
+    }
+
+    //-----------------------------------------
+    // Moderation (DONE)
     //-----------------------------------------
     /**
      * Toggles contest mode on a post.
@@ -1258,20 +1269,18 @@ class Phapper {
             'id' => $thing_id
         );
 
-        $response = $this->apiCall("/api/distinguish", 'POST', $params);
-
-        return $response;
+        return $this->apiCall("/api/distinguish", 'POST', $params);
     }
 
     /**
      * Retrieves recent entries from the moderation log for the specified subreddit.
      * @param string $subreddit Subreddit of log to retrieve. All moderated subreddits by default.
      * @param int $limit Upper limit of number of items to retrieve. Maximum is 500.
-     * @param null $after Obtain the page of the results that come after the specified ModAction.
-     * @param null $mod Filter by moderator.
-     * @param null $action Filter by mod action.
-     * @param null $before Obtain the page of the results that come before the specified ModAction.
-     * @return mixed|null Returns a listing object with modaction children. Null if failed.
+     * @param string|null $after Obtain the page of the results that come after the specified ModAction.
+     * @param string|null $mod Filter by moderator.
+     * @param string|null $action Filter by mod action.
+     * @param string|null $before Obtain the page of the results that come before the specified ModAction.
+     * @return object Listing object with modaction children.
      */
     public function getModerationLog($subreddit = 'mod', $limit = 25, $after = null, $mod = null, $action = null, $before = null) {
         $params = array(
@@ -1285,216 +1294,186 @@ class Phapper {
 
         $response = $this->apiCall("/r/$subreddit/about/log.json", 'GET', $params);
 
-        if (isset($response->error)) {
-            return null;
-        }
-
         return $response->data;
+    }
+
+    /**
+     * Private function to unify process of retrieving several subreddit mod listings.
+     * @param string $subreddit Subreddit for which to retrieve a listing.
+     * @param string $location One of 'reports', 'spam', 'modqueue', 'unmoderated', 'edited'.
+     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @param string|null $only Obtain only links or comments. One of 'links' or 'comments'. Null for both.
+     * @return object Listing of selected subreddit's posts and/or comments at the selected location.
+     */
+    private function getSubredditModListing($subreddit, $location, $limit, $after, $before, $only) {
+        $params = array(
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'location' => $location,
+            'only' => $only,
+            'show' => 'all'
+        );
+
+        return $this->apiCall("/r/$subreddit/about/$location.json", 'GET', $params);
     }
 
     /**
      * Retrieves a list of things that have been reported in the specified subreddit.
      * @param string $subreddit Subreddit of items to retrieve. All moderated subreddits by default.
-     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
-     * @param null $after Obtain the page of the results that come after the specified thing.
-     * @param null $before Obtain the page of the results that come before the specified thing.
-     * @return mixed|null Returns a listing object with link and comment children. Null if failed.
+     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @param null $only Obtain only links or comments. One of 'links' or 'comments'. Null for both.
+     * @return mixed|null Returns a listing object with link and/or comment children.
      */
-    public function getReports($subreddit = 'mod', $limit = 25, $after = null, $before = null) {
-        $params = array(
-            'after' => $after,
-            'before' => $before,
-            'limit' => $limit,
-            'show' => 'all'
-        );
-
-        $response = $this->apiCall("/r/$subreddit/about/reports.json", 'GET', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response->data;
+    public function getReports($subreddit = 'mod', $limit = 25, $after = null, $before = null, $only = null) {
+        return $this->getSubredditModListing($subreddit, 'reports', $limit, $after, $before, $only);
     }
 
     /**
      * Retrieves a list of things that have been marked as spam in the specified subreddit.
      * @param string $subreddit Subreddit of items to retrieve. All moderated subreddits by default.
-     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
-     * @param null $after Obtain the page of the results that come after the specified thing.
-     * @param null $before Obtain the page of the results that come before the specified thing.
-     * @return mixed|null Returns a listing object with link and comment children. Null if failed.
+     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @param null $only Obtain only links or comments. One of 'links' or 'comments'. Null for both.
+     * @return mixed|null Returns a listing object with link and/or comment children.
      */
-    public function getSpam($subreddit = 'mod', $limit = 25, $after = null, $before = null) {
-        $params = array(
-            'after' => $after,
-            'before' => $before,
-            'limit' => $limit,
-            'show' => 'all'
-        );
-
-        $response = $this->apiCall("/r/$subreddit/about/spam.json", 'GET', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response->data;
+    public function getSpam($subreddit = 'mod', $limit = 25, $after = null, $before = null, $only = null) {
+        return $this->getSubredditModListing($subreddit, 'spam', $limit, $after, $before, $only);
     }
 
     /**
      * Retrieves a list of things that have been placed in the modqueue of the specified subreddit.
      * @param string $subreddit Subreddit of items to retrieve. All moderated subreddits by default.
-     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
-     * @param null $after Obtain the page of the results that come after the specified thing.
-     * @param null $before Obtain the page of the results that come before the specified thing.
-     * @return mixed|null Returns a listing object with link and comment children. Null if failed.
+     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @param null $only Obtain only links or comments. One of 'links' or 'comments'. Null for both.
+     * @return mixed|null Returns a listing object with link and/or comment children.
      */
-    public function getModqueue($subreddit = 'mod', $limit = 25, $after = null, $before = null) {
-        $params = array(
-            'after' => $after,
-            'before' => $before,
-            'limit' => $limit,
-            'show' => 'all'
-        );
-
-        $response = $this->apiCall("/r/$subreddit/about/modqueue.json", 'GET', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response->data;
+    public function getModqueue($subreddit = 'mod', $limit = 25, $after = null, $before = null, $only = null) {
+        return $this->getSubredditModListing($subreddit, 'modqueue', $limit, $after, $before, $only);
     }
 
     /**
-     * Retrieves a list of things that have not been reviewed by a mod in the specified subreddit.
+     * Retrieves a list of things that have not been moderated in the specified subreddit.
      * @param string $subreddit Subreddit of items to retrieve. All moderated subreddits by default.
-     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
-     * @param null $after Obtain the page of the results that come after the specified thing.
-     * @param null $before Obtain the page of the results that come before the specified thing.
-     * @return mixed|null Returns a listing object with link and comment children. Null if failed.
+     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return mixed|null Returns a listing object with link and/or comment children.
      */
     public function getUnmoderated($subreddit = 'mod', $limit = 25, $after = null, $before = null) {
-        $params = array(
-            'after' => $after,
-            'before' => $before,
-            'limit' => $limit,
-            'show' => 'all'
-        );
-
-        $response = $this->apiCall("/r/$subreddit/about/unmoderated.json", 'GET', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response->data;
+        return $this->getSubredditModListing($subreddit, 'unmoderated', $limit, $after, $before, null);
     }
 
     /**
-     * Retrieves a list of things that have been edited in the specified subreddit.
+     * Retrieves a list of comments that have been edited by the author in the specified subreddit.
      * @param string $subreddit Subreddit of items to retrieve. All moderated subreddits by default.
-     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
-     * @param null $after Obtain the page of the results that come after the specified thing.
-     * @param null $before Obtain the page of the results that come before the specified thing.
-     * @return mixed|null Returns a listing object with link and comment children. Null if failed.
+     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return mixed|null Returns a listing object with link and/or comment children.
      */
-    public function getEdited($subreddit = 'mod', $limit = 25, $after = null, $before = null) {
-        $params = array(
-            'after' => $after,
-            'before' => $before,
-            'limit' => $limit,
-            'show' => 'all'
-        );
-
-        $response = $this->apiCall("/r/$subreddit/about/edited.json", 'GET', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response->data;
+    public function getEditedComments($subreddit = 'mod', $limit = 25, $after = null, $before = null) {
+        return $this->getSubredditModListing($subreddit, 'edited', $limit, $after, $before, null);
     }
 
     /**
      * Accepts a moderator invitation for the specified subreddit. You must have a pending invitation for that subreddit.
      * @param string $subreddit Subreddit to accept invitation.
-     * @return mixed|null Returns response error list. Empty list on success.
+     * @return object Response to API call.
      */
     public function acceptModeratorInvite($subreddit) {
         $params = array(
             'api_type' => 'json'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/accept_moderator_invite", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response->json;
+        return $this->apiCall("/r/$subreddit/api/accept_moderator_invite", 'POST', $params);
     }
 
     /**
      * Marks the specified thing as approved.
      * @param string $thing_id Thing ID of object to be approved.
+     * @return object Response to API call, probably empty.
      */
     public function approve($thing_id) {
         $params = array(
             'id' => $thing_id
         );
 
-        $this->apiCall("/api/approve", 'POST', $params);
+        return $this->apiCall("/api/approve", 'POST', $params);
     }
 
     /**
      * Removes a post or comment from a subreddit.
      * @param string $thing_id Thing ID of object to remove.
-     * @param bool|false $spam Whether or not the object should be removed as spam.
+     * @param bool $spam Whether or not the object should be removed as spam.
+     * @return object Response to API call, probably empty.
      */
-    public function remove($thing_id, $spam = false) {
+    public function remove($thing_id) {
         $params = array(
             'id' => $thing_id,
-            'spam' => ($spam) ? 'true' : 'false'
+            'spam' => 'false'
         );
 
-        $this->apiCall("/api/remove", 'POST', $params);
+        return $this->apiCall("/api/remove", 'POST', $params);
+    }
+
+    /**
+     * Removes a post or comment from a subreddit as spam.
+     * @param string $thing_id Thing ID of object to remove.
+     * @param bool $spam Whether or not the object should be removed as spam.
+     * @return object Response to API call, probably empty.
+     */
+    public function spam($thing_id) {
+        $params = array(
+            'id' => $thing_id,
+            'spam' => 'true'
+        );
+
+        return $this->apiCall("/api/remove", 'POST', $params);
     }
 
     /**
      * Ignores reports for the specified thing.
      * @param string $thing_id Thing ID of object to be ignored.
+     * @return object Response to API call, probably empty.
      */
     public function ignoreReports($thing_id) {
         $params = array(
             'id' => $thing_id
         );
 
-        $this->apiCall("/api/ignore_reports", 'POST', $params);
+        return $this->apiCall("/api/ignore_reports", 'POST', $params);
     }
 
     /**
      * Unignores reports for the specified thing.
      * @param string $thing_id Thing ID of object to be unignored.
+     * @return object Response to API call, probably empty.
      */
     public function unignoreReports($thing_id) {
         $params = array(
             'id' => $thing_id
         );
 
-        $this->apiCall("/api/unignore_reports", 'POST', $params);
+        return $this->apiCall("/api/unignore_reports", 'POST', $params);
     }
 
     /**
      * Abdicate approved submitter status in a subreddit.
      * @param string $subreddit Name of subreddit to leave.
-     * @return bool|null Returns true on success. Null if failed.
+     * @return object Response to API call, probably empty.
      */
     public function leaveContributor($subreddit) {
         $subreddit_info = $this->aboutSubreddit($subreddit);
 
-        if (is_null($subreddit_info)) {
+        if (!isset($subreddit_info->name)) {
             return null;
         }
 
@@ -1502,20 +1481,18 @@ class Phapper {
             'id' => $subreddit_info->name
         );
 
-        $this->apiCall("/api/leavecontributor", 'POST', $params);
-
-        return true;
+        return $this->apiCall("/api/leavecontributor", 'POST', $params);
     }
 
     /**
      * Abdicate moderator status in a subreddit.
      * @param string $subreddit Name of subreddit to leave.
-     * @return bool|null Returns true on success. Null if failed.
+     * @return object Response to API call, probably empty.
      */
     public function leaveModerator($subreddit) {
         $subreddit_info = $this->aboutSubreddit($subreddit);
 
-        if (is_null($subreddit_info)) {
+        if (!isset($subreddit_info->name)) {
             return null;
         }
 
@@ -1523,9 +1500,7 @@ class Phapper {
             'id' => $subreddit_info->name
         );
 
-        $this->apiCall("/api/leavemoderator", 'POST', $params);
-
-        return true;
+        return $this->apiCall("/api/leavemoderator", 'POST', $params);
     }
 
     /**
@@ -1535,7 +1510,7 @@ class Phapper {
      * @param string|null $note Ban note in banned users list. Not shown to user.
      * @param string|null $message Ban message sent to user.
      * @param int|null $duration Duration of ban in days.
-     * @return mixed|null Response of API call on success. Null if failed.
+     * @return object Response of API call.
      */
     public function ban($subreddit, $user, $note = null, $message = null, $duration = null) {
         $params = array(
@@ -1547,20 +1522,14 @@ class Phapper {
             'type' => 'banned'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/friend", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/friend", 'POST', $params);
     }
 
     /**
      * Unban a user from a subreddit.
      * @param string $subreddit Subreddit from which to unban the user.
      * @param string $user Username of user to unban.
-     * @return mixed|null Response of API call on success. Null if failed.
+     * @return object Response of API call, probably empty.
      */
     public function unban($subreddit, $user) {
         $params = array(
@@ -1568,20 +1537,14 @@ class Phapper {
             'type' => 'banned'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/unfriend", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/unfriend", 'POST', $params);
     }
 
     /**
      * Add a user as a contributor to a subreddit.
      * @param string $subreddit Subreddit to which to add user.
      * @param string $user Username of user to add.
-     * @return mixed|null Response of API call on success. Null if failed.
+     * @return object Response of API call.
      */
     public function addContributor($subreddit, $user) {
         $params = array(
@@ -1590,20 +1553,14 @@ class Phapper {
             'type' => 'contributor'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/friend", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/friend", 'POST', $params);
     }
 
     /**
      * Remove a user as a contributor from a subreddit.
      * @param string $subreddit Subreddit from which to remove the user.
      * @param string $user Username of user to remove.
-     * @return mixed|null Response of API call on success. Null if failed.
+     * @return object Response of API call, probably empty..
      */
     public function removeContributor($subreddit, $user) {
         $params = array(
@@ -1611,23 +1568,21 @@ class Phapper {
             'type' => 'contributor'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/unfriend", 'POST', $params);
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/unfriend", 'POST', $params);
     }
 
     /**
      * Invite a user to become a moderator to a subreddit.
      * @param string $subreddit Subreddit to which to invite user.
      * @param string $user Username of user to invite.
-     * @param bool|true $perm_all If the user should have full permissions.
-     * @param bool|false $perm_access If the user should have the 'access' permission.
-     * @param bool|false $perm_config If the user should have the 'config' permission.
-     * @param bool|false $perm_flair If the user should have the 'flair' permission.
-     * @param bool|false $perm_mail If the user should have the 'mail' permission.
-     * @param bool|false $perm_posts If the user should have the 'posts' permission.
-     * @param bool|false $perm_wiki If the user should have the 'wiki' permission.
-     * @return mixed|null Returns the response of the API call on success. Null if failed.
+     * @param bool $perm_all If the user should have full permissions.
+     * @param bool $perm_access If the user should have the 'access' permission.
+     * @param bool $perm_config If the user should have the 'config' permission.
+     * @param bool $perm_flair If the user should have the 'flair' permission.
+     * @param bool $perm_mail If the user should have the 'mail' permission.
+     * @param bool $perm_posts If the user should have the 'posts' permission.
+     * @param bool $perm_wiki If the user should have the 'wiki' permission.
+     * @return object Response of API call.
      */
     public function inviteModerator($subreddit, $user, $perm_all = true, $perm_access = false, $perm_config = false, $perm_flair = false, $perm_mail = false, $perm_posts = false, $perm_wiki = false) {
         $permissions = array();
@@ -1665,20 +1620,14 @@ class Phapper {
             'type' => 'moderator_invite'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/friend", 'POST', $params);
-
-//        if (isset($response->error)) {
-//            return null;
-//        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/friend", 'POST', $params);
     }
 
     /**
      * Remove an existing moderator as a moderator from a subreddit. To revoke an invitation, use uninviteModerator().
      * @param string $subreddit Subreddit from which to remove a user as a moderator.
      * @param string $user Username of user to remove
-     * @return mixed|null Returns the response of the API call on success. Null if failed.
+     * @return object Response of API call, probably empty.
      */
     public function removeModerator($subreddit, $user) {
         $params = array(
@@ -1686,20 +1635,14 @@ class Phapper {
             'type' => 'moderator'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/unfriend", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/unfriend", 'POST', $params);
     }
 
     /**
      * Revoke a user's pending invitation to moderate a subreddit. To remove an existing moderator, use removeModerator().
      * @param string $subreddit Subreddit from which to revoke a user's invitation.
      * @param string $user User whose invitation to revoke.
-     * @return mixed|null Returns the response of the API call on success. Null if failed.
+     * @return object Response of API call, probably empty.
      */
     public function uninviteModerator($subreddit, $user) {
         $params = array(
@@ -1707,27 +1650,21 @@ class Phapper {
             'type' => 'moderator_invite'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/unfriend", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/unfriend", 'POST', $params);
     }
 
     /**
      * Modify an existing moderator's permission set. To modify an invited moderator's permissions, use setInvitationPermissions().
      * @param string $subreddit Subreddit in which to edit a user's permissions
      * @param string $user Username of user to edit permissions.
-     * @param bool|true $perm_all If the user should have full permissions.
-     * @param bool|false $perm_access If the user should have the 'access' permission.
-     * @param bool|false $perm_config If the user should have the 'config' permission.
-     * @param bool|false $perm_flair If the user should have the 'flair' permission.
-     * @param bool|false $perm_mail If the user should have the 'mail' permission.
-     * @param bool|false $perm_posts If the user should have the 'posts' permission.
-     * @param bool|false $perm_wiki If the user should have the 'wiki' permission.
-     * @return mixed|null Returns the response of the API call on success. Null if failed.
+     * @param bool $perm_all If the user should have full permissions.
+     * @param bool $perm_access If the user should have the 'access' permission.
+     * @param bool $perm_config If the user should have the 'config' permission.
+     * @param bool $perm_flair If the user should have the 'flair' permission.
+     * @param bool $perm_mail If the user should have the 'mail' permission.
+     * @param bool $perm_posts If the user should have the 'posts' permission.
+     * @param bool $perm_wiki If the user should have the 'wiki' permission.
+     * @return object Response of API call.
      */
     public function setModeratorPermissions($subreddit, $user, $perm_all = true, $perm_access = false, $perm_config = false, $perm_flair = false, $perm_mail = false, $perm_posts = false, $perm_wiki = false) {
         $permissions = array();
@@ -1765,27 +1702,21 @@ class Phapper {
             'type' => 'moderator'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/setpermissions", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/setpermissions", 'POST', $params);
     }
 
     /**
      * Modify an invited moderator's permission set. To modify an existing moderator's permissions, use setModeratorPermissions().
      * @param string $subreddit Subreddit in which to edit a user's permissions
      * @param string $user Username of user to edit permissions.
-     * @param bool|true $perm_all If the user should have full permissions.
-     * @param bool|false $perm_access If the user should have the 'access' permission.
-     * @param bool|false $perm_config If the user should have the 'config' permission.
-     * @param bool|false $perm_flair If the user should have the 'flair' permission.
-     * @param bool|false $perm_mail If the user should have the 'mail' permission.
-     * @param bool|false $perm_posts If the user should have the 'posts' permission.
-     * @param bool|false $perm_wiki If the user should have the 'wiki' permission.
-     * @return mixed|null Returns the response of the API call on success. Null if failed.
+     * @param bool $perm_all If the user should have full permissions.
+     * @param bool $perm_access If the user should have the 'access' permission.
+     * @param bool $perm_config If the user should have the 'config' permission.
+     * @param bool $perm_flair If the user should have the 'flair' permission.
+     * @param bool $perm_mail If the user should have the 'mail' permission.
+     * @param bool $perm_posts If the user should have the 'posts' permission.
+     * @param bool $perm_wiki If the user should have the 'wiki' permission.
+     * @return object Response of API call.
      */
     public function setInvitationPermissions($subreddit, $user, $perm_all = true, $perm_access = false, $perm_config = false, $perm_flair = false, $perm_mail = false, $perm_posts = false, $perm_wiki = false) {
         $permissions = array();
@@ -1823,13 +1754,7 @@ class Phapper {
             'type' => 'moderator_invite'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/setpermissions", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/setpermissions", 'POST', $params);
     }
 
     /**
@@ -1838,7 +1763,7 @@ class Phapper {
      * @param string $user Username of user to ban.
      * @param string|null $note Ban note in banned users list. Not shown to user.
      * @param int|null $duration Duration of ban in days.
-     * @return mixed|null Response of API call on success. Null if failed.
+     * @return object Response of API call.
      */
     public function wikiBan($subreddit, $user, $note = null, $duration = null) {
         $params = array(
@@ -1849,20 +1774,14 @@ class Phapper {
             'type' => 'wikibanned'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/friend", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        $this->apiCall("/r/$subreddit/api/friend", 'POST', $params);
     }
 
     /**
      * Unban a user from a subreddit's wiki.
      * @param string $subreddit Subreddit from which to unban the user.
      * @param string $user Username of user to unban.
-     * @return mixed|null Response of API call on success. Null if failed.
+     * @return object Response of API call, probably empty.
      */
     public function wikiUnban($subreddit, $user) {
         $params = array(
@@ -1870,20 +1789,14 @@ class Phapper {
             'type' => 'wikibanned'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/unfriend", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/unfriend", 'POST', $params);
     }
 
     /**
      * Add a user as a contributor to a subreddit's wiki.
      * @param string $subreddit Subreddit to which to add user.
      * @param string $user Username of user to add.
-     * @return mixed|null Response of API call on success. Null if failed.
+     * @return object Response to API call.
      */
     public function addWikiContributor($subreddit, $user) {
         $params = array(
@@ -1892,20 +1805,14 @@ class Phapper {
             'type' => 'wikicontributor'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/friend", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/friend", 'POST', $params);
     }
 
     /**
      * Remove a user as a contributor from a subreddit's wiki.
      * @param string $subreddit Subreddit from which to remove the user.
      * @param string $user Username of user to remove.
-     * @return mixed|null Response of API call on success. Null if failed.
+     * @return mixed|null Response to API call, probably empty.
      */
     public function removeWikiContributor($subreddit, $user) {
         $params = array(
@@ -1913,23 +1820,111 @@ class Phapper {
             'type' => 'wikicontributor'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/unfriend", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/unfriend", 'POST', $params);
     }
 
+    /**
+     * Mute a user in the specified subreddit by username.
+     * @param string $subreddit Subreddit in which to mute the user.
+     * @param string $user Username of user to mute.
+     * @param string|null $note Mute note in muted users list. Not shown to user.
+     * @return object Response to API call.
+     */
+    public function mute($subreddit, $user, $note = null) {
+        $params = array(
+            'api_type' => 'json',
+            'name' => $user,
+            'note' => $note,
+            'type' => 'muted'
+        );
+
+        return $this->apiCall("/r/$subreddit/api/friend", 'POST', $params);
+    }
+
+    /**
+     * Unmute a user in the specified subreddit by username.
+     * @param string $subreddit Subreddit to which to unmute the user.
+     * @param string $user Username of user to unmute.
+     * @return object Response of API call, probably empty.
+     */
+    public function unmute($subreddit, $user) {
+        $params = array(
+            'api_type' => 'json',
+            'name' => $user,
+            'type' => 'muted'
+        );
+
+        return $this->apiCall("/r/$subreddit/api/unfriend", 'POST', $params);
+    }
+
+    /**
+     * Mute a user from a subreddit based on the thing ID of a message they sent.
+     * @param string $thing_id Thing ID of the message author to be muted.
+     * @return object Repsonse to API call, probably empty.
+     */
+    public function muteUserByMessage($thing_id) {
+        $params = array(
+            'id' => $thing_id
+        );
+
+        return $this->apiCall("/api/mute_message_author", 'POST', $params);
+    }
+
+    /**
+     * Unmute a user from a subreddit based on the thing ID of a message they sent.
+     * @param string $thing_id Thing ID of the message author to be unmuted.
+     * @return object Repsonse to API call, probably empty.
+     */
+    public function unmuteUserByMessage($thing_id) {
+        $params = array(
+            'id' => $thing_id
+        );
+
+        return $this->apiCall("/api/unmute_message_author", 'POST', $params);
+    }
 
     //-----------------------------------------
     // Multis
+    // TODO
     //-----------------------------------------
 
     //-----------------------------------------
-    // Search
+    // Search (DONE)
     //-----------------------------------------
+    /**
+     * Perform a search query.
+     * Somewhat untested due to the complexity of and possible combinations to use in the search function.
+     * @param string $query Query of which to search.
+     * @param string|null $subreddit Subreddit to which to restrict search.
+     * @param string|null $sort Sort results by one of 'relevance', 'hot', 'top', 'new', 'comments'. Defaults to 'relevance'.
+     * @param string|null $time One of 'hour', 'day', 'week', 'month', 'year', 'all'. Defaults to all.
+     * @param string|null $type Comma-delimited list of result types: 'sr', 'link', or null.
+     * @param int $limit Upper limit of results to return.
+     * @param string|null $after Obtain list items below this thing ID.
+     * @param string|null $before Obtain list of items above this thing ID.
+     * @return object Listing of search results
+     */
+    public function search($query, $subreddit = null, $sort = null, $time = null, $type = null, $limit = 25, $after = null, $before = null) {
+        if (!empty($subreddit)) {
+            $subreddit_prefix = "/r/$subreddit";
+        }
+        else {
+            $subreddit_prefix = "";
+        }
+
+        $params = array(
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'q' => $query,
+            'restrict_sr' => (!empty($subreddit)) ? 'on' : 'off',
+            'show' => 'all',
+            'sort' => $sort,
+            't' => $time
+        );
+
+        return $this->apiCall($subreddit_prefix."/search", 'GET', $params);
+    }
 
     //-----------------------------------------
     // Subreddits
@@ -2000,11 +1995,17 @@ class Phapper {
     // Wiki
     //-----------------------------------------
 
+    //-----------------------------------------
+    // API
+    //-----------------------------------------
     public function apiCall($path, $method = 'GET', $params = null) {
+        //Prepare request URL
         $url = $this->endpoint.$path;
 
+        //Obtain access token for authentication
         $token = $this->oauth2->getAccessToken();
 
+        //Prepare cURL options
         $options[CURLOPT_RETURNTRANSFER] = true;
         $options[CURLOPT_CONNECTTIMEOUT] = 5;
         $options[CURLOPT_TIMEOUT] = 10;
@@ -2014,6 +2015,7 @@ class Phapper {
             "Authorization: ".$token['token_type']." ".$token['access_token']
         );
 
+        //Prepare URL or POST parameters
         if (isset($params)) {
             if ($method == 'GET') {
                 $url .= '?'.http_build_query($params);
@@ -2023,17 +2025,23 @@ class Phapper {
             }
         }
 
+        //Build cURL object
         $ch = curl_init($url);
         curl_setopt_array($ch, $options);
 
+        //Wait on rate limiter if necessary
         $this->ratelimiter->wait();
+
+        //Print request URL for debug
         if ($this->debug) {
             echo $url."\n";
         }
 
+        //Send request and close connection
         $response_raw = curl_exec($ch);
         curl_close($ch);
 
+        //Parse response
         $response = json_decode($response_raw);
         if ($json_error = json_last_error()) {
             $response = $response_raw;
