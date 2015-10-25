@@ -38,104 +38,67 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Account
+    // Account (DONE)
     //-----------------------------------------
     /**
      * Gets information about the current user's account.
-     * @return mixed|null An object representing the current user. Null if failed.
+     * @return object An object representing the current user.
      */
     public function getMe() {
-        $response = $this->apiCall("/api/v1/me");
-        var_dump($response);
-
-        if (!isset($response->id)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/api/v1/me");
     }
 
     /**
      * Gets karma breakdown of current user.
-     * @return array|null Array of objects representing subreddits and corresponding karma values. Null if failed.
+     * @return object Listing subreddits and corresponding karma values.
      */
     public function getMyKarmaBreakdown() {
-        $response = $this->apiCall("/api/v1/me/karma");
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response->data;
+        return $this->apiCall("/api/v1/me/karma");
     }
 
     /**
      * Gets current user's site preferences.
-     * @return mixed|null Object representing user's preferences. Null if failed.
+     * @return object Object representing user's preferences.
      */
     public function getMyPrefs() {
-        $response = $this->apiCall("/api/v1/me/prefs");
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/api/v1/me/prefs");
     }
 
     /**
      * Gets current user's trophies.
-     * @return array|null Array containing user's trophy objects. Null if failed.
+     * @return object Listing of current user's trophies.
      */
     public function getMyTrophies() {
-        $response = $this->apiCall("/api/v1/me/trophies");
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response->data->trophies;
+        return $this->apiCall("/api/v1/me/trophies");
     }
 
     /**
      * Gets a list of the current user's friends.
-     * @return mixed|null Listing of current user's friend objects. Null if failed.
+     * @return mixed|null Listing of users that are the current user's friends.
      */
     public function getMyFriends() {
-        $response = $this->apiCall("/api/v1/me/friends");
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/api/v1/me/friends");
     }
 
 
     /**
      * Gets a list of the current user's blocked users.
-     * @return mixed|null Listing of current user's blocked users. Null if failed.
+     * @return object Listing of current user's blocked users.
      */
-    public function getBlockedUsers() {
-        $response = $this->apiCall("/prefs/blocked");
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+    public function getMyBlockedUsers() {
+        return $this->apiCall("/prefs/blocked");
     }
 
     //-----------------------------------------
-    // Flair
+    // Flair (DONE)
     //-----------------------------------------
     /**
-     * Retrieves a list of all assigned user flair in the specified subreddit.
+     * Retrieves a list of all assigned user flair in the specified subreddit. Must be a mod of that subreddit.
      * @param string $subreddit Name of subreddit from which to retrieve flair list.
      * @param int $limit Upper limit of number of items to retrieve. Upper limit is 1000.
-     * @param null $after Use 'next' attribute of previous call to retrieve next page.
-     * @param null $before Retrieve only flairs that are higher than this user ID on the list.
-     * @return mixed|null
+     * @param string|null $after Use 'next' attribute of previous call to retrieve next page.
+     * @param string|null $before Retrieve only flairs that are higher than this user ID on the list.
+     * @return object Listing of users that are assigned flair in the specified subreddit.
      */
     public function getUserFlairList($subreddit, $limit = 25, $after = null, $before = null) {
         $params = array(
@@ -147,10 +110,6 @@ class Phapper {
 
         $response = $this->apiCall("/r/$subreddit/api/flairlist.json", 'GET', $params);
 
-        if (isset($response->error)) {
-            return null;
-        }
-
         return $response;
     }
 
@@ -158,11 +117,11 @@ class Phapper {
      * Adds or modifies a flair template in a subreddit.
      * @param string $subreddit Name of subreddit to add flair template.
      * @param string $type Specifies user or link flair template. One of 'link' or 'user'.
-     * @param null $text Flair text.
-     * @param null $css_class Flair CSS class.
-     * @param bool|false $editable Whether or not to allow users to edit the flair's text when assigning it.
-     * @param null $template_id The template ID of an existing flair to modify. If null, will add a new one.
-     * @return mixed|null Returns response to API call on success. Null if failed.
+     * @param string|null $text Flair text.
+     * @param string|null $css_class Flair CSS class.
+     * @param bool $editable Whether or not to allow users to edit the flair's text when assigning it.
+     * @param string|null $template_id The template ID of an existing flair to modify. If null, will add a new one.
+     * @return object Response to API call.
      */
     public function addFlairTemplate($subreddit, $type, $text = null, $css_class = null, $editable = false, $template_id = null) {
         $params = array(
@@ -174,20 +133,14 @@ class Phapper {
             'text_editable' => ($editable) ? 'true' : 'false'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/flairtemplate", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/flairtemplate", 'POST', $params);
     }
 
     /**
      * Deletes all flair templates of the selected type from the selected subreddit.
      * @param string $subreddit Subreddit of flairs to clear.
      * @param string $type One of 'user' or 'link'.
-     * @return mixed|null Returns result of API call on success. Null if failed or incorrect type.
+     * @return object|null Response to API call. Null if incorrect type.
      */
     public function clearFlairTemplates($subreddit, $type) {
         if ($type !== 'user' && $type !== 'link') {
@@ -199,20 +152,15 @@ class Phapper {
             'flair_type' => $type
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/clearflairtemplates", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/clearflairtemplates", 'POST', $params);
     }
 
     /**
      * Deletes the selected flair template from the specified subreddit.
+     * $template_id can be obtained with getUserFlairSelector and getLinkFlairSelector
      * @param string $subreddit Subreddit from which to delete flair template.
      * @param string $template_id ID of template to delete.
-     * @return mixed|null Returns result of API call on success. Null if failed.
+     * @return object Response to API call.
      */
     public function deleteFlairTemplate($subreddit, $template_id) {
         $params = array(
@@ -220,20 +168,14 @@ class Phapper {
             'flair_template_id' => $template_id
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/deleteflairtemplate", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/deleteflairtemplate", 'POST', $params);
     }
 
     /**
      * Deletes a user's flair from the specified subreddit.
      * @param string $subreddit Subreddit in which to delete user flair.
      * @param string $user Username of user whose flair to delete.
-     * @return mixed|null Returns result of API call on success. Null if failed.
+     * @return object Response to API call.
      */
     public function deleteUserFlair($subreddit, $user) {
         $params = array(
@@ -241,13 +183,7 @@ class Phapper {
             'name' => $user
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/deleteflair", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/deleteflair", 'POST', $params);
     }
 
     /**
@@ -255,35 +191,27 @@ class Phapper {
      * Also useful for obtaining flair ID's.
      * @param string $subreddit Subreddit in which to view flair options.
      * @param string|null $user Username for whom to view selection. Defaults to current user.
-     * @return mixed Returns API response.
+     * @return object Response to API call.
      */
     public function getUserFlairSelector($subreddit, $user = null) {
         $params = array(
             'name' => $user,
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/flairselector", 'POST', $params);
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/flairselector", 'POST', $params);
     }
 
     /**
      * Gets current flair and a list of possible flairs for the specified link.
      * @param string $thing_id Thing ID of object to view flairs.
-     * @return mixed|null Returns API response on success. Null if failed.
+     * @return object Response to API call.
      */
     public function getLinkFlairSelector($thing_id) {
         $params = array(
             'link' => $thing_id
         );
 
-        $response = $this->apiCall("/api/flairselector", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/api/flairselector", 'POST', $params);
     }
 
     /**
@@ -292,7 +220,7 @@ class Phapper {
      * @param string $user Username of user to whom to apply flair. Mandatory, don't ask me why.
      * @param string|null $template_id Template ID of template to select. Null will remove the user's flair.
      * @param string|null $text Modified flair text, if allowed.
-     * @return mixed|null Returns API response on success. Null if failed.
+     * @return object Response to API call.
      */
     public function selectUserFlair($subreddit, $user, $template_id = null, $text = null) {
         $params = array(
@@ -302,13 +230,7 @@ class Phapper {
             'text' => $text
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/selectflair", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/selectflair", 'POST', $params);
     }
 
     /**
@@ -316,7 +238,7 @@ class Phapper {
      * @param string $thing_id Thing ID of link to apply flair.
      * @param string|null $template_id Template ID of template to apply to link. Null will remove the link's flair.
      * @param string|null $text Modified flair text, if allowed.
-     * @return mixed|null Returns API response on success. Null if failed.
+     * @return object Response to API call.
      */
     public function selectLinkFlair($thing_id, $template_id = null, $text = null) {
         $params = array(
@@ -326,13 +248,7 @@ class Phapper {
             'text' => $text
         );
 
-        $response = $this->apiCall("/api/selectflair", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/api/selectflair", 'POST', $params);
     }
 
     /**
@@ -341,7 +257,7 @@ class Phapper {
      * @param string $user Username of user to assign flair.
      * @param string|null $text Custom flair text.
      * @param string|null $css_class Custom flair CSS class. If both fields are null, deletes flair.
-     * @return mixed|null Returns API response on success. Null if failed.
+     * @return object Response to API call.
      */
     public function assignUserFlair($subreddit, $user, $text = null, $css_class = null) {
         $params = array(
@@ -351,13 +267,7 @@ class Phapper {
             'text' => $text
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/flair", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/flair", 'POST', $params);
     }
 
     /**
@@ -366,7 +276,7 @@ class Phapper {
      * @param string $thing_id Thing ID of link to assign flair.
      * @param string|null $text Custom flair text.
      * @param string|null $css_class Custom flair CSS class. If both fields are null, deletes flair.
-     * @return mixed|null Returns API response on success. Null if failed.
+     * @return object Response to API call.
      */
     public function assignLinkFlair($subreddit, $thing_id, $text = null, $css_class = null) {
         $params = array(
@@ -376,20 +286,14 @@ class Phapper {
             'text' => $text
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/flair", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/flair", 'POST', $params);
     }
 
     /**
      * Selects whether or not to show the current user's flair in the selected subreddit.
      * @param string $subreddit Subreddit in which to enable or disable flair.
-     * @param bool|true $show True to show flair. False to hide flair.
-     * @return mixed|null Returns API response on success. Null if failed.
+     * @param bool $show True to show flair. False to hide flair.
+     * @return object Response to API call.
      */
     public function showMyFlair($subreddit, $show = true) {
         $params = array(
@@ -397,13 +301,7 @@ class Phapper {
             'flair_enabled' => ($show) ? 'true' : 'false'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/setflairenabled", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/setflairenabled", 'POST', $params);
     }
 
     /**
@@ -414,7 +312,7 @@ class Phapper {
      * @param boolean $user_self_assign Whether or not users can select their own user flair.
      * @param string $link_position On which side to display links' flair. One of 'left', 'right', or 'none'.
      * @param boolean $link_self_assign Whether or not users can select their own links' flair.
-     * @return mixed|null Returns API response on success. Null if failed.
+     * @return object|null Response to API call. Null if invalid arguments.
      */
     public function configureSubredditFlair($subreddit, $user_enabled, $user_position, $user_self_assign, $link_position, $link_self_assign) {
         if (!($user_position == 'left' || $user_position == 'right') || !(is_null($link_position) || $link_position == 'none' || $link_position == 'left' || $link_position == 'right')) {
@@ -434,33 +332,58 @@ class Phapper {
             'link_flair_self_assign_enabled' => ($link_self_assign) ? 'true' : 'false'
         );
 
-        $response = $this->apiCall("/r/$subreddit/api/flairconfig", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response;
+        return $this->apiCall("/r/$subreddit/api/flairconfig", 'POST', $params);
 
     }
 
 
     //-----------------------------------------
-    // reddit gold
+    // reddit gold (DONE, UNTESTED)
     //-----------------------------------------
+    /**
+     * UNTESTED
+     * Gild a link or comment, which gives the author reddit gold. Must have sufficient gold creddits.
+     * Reddit's documentation is odd, indicating that the thing ID is required both in the URL and the POST parameters.
+     * @param string $thing_id Thing ID of link or comment to gild.
+     * @return object Response to API call.
+     */
+    public function gild($thing_id) {
+        $params = array(
+            'fullname' => $thing_id
+        );
+        return $this->apiCall("/api/v1/gold/gild/$thing_id", 'POST', $params);
+    }
+
+    /**
+     * UNTESTED
+     * Give the specified user the specified months of reddit gold. Must have sufficient gold creddits.
+     * Reddit's documentation is odd, indicating that the username is required both in the URL and the POST parameters.
+     * @param string $user Username of user to whom to give gold.
+     * @param int $months Number of months to give reddit gold.
+     * @return object Response to API call.
+     */
+    public function giveGold($user, $months = 1) {
+        $params = array(
+            'months' => strval($months),
+            'username' => $user
+        );
+
+        return $this->apiCall("/api/v1/gold/give/$user", 'POST', $params);
+    }
 
     //-----------------------------------------
-    // Links & comments
+    // Links & comments (DONE)
     //-----------------------------------------
     /**
      * Submits a new link post.
      * @param string $subreddit Subreddit in which to post link.
      * @param string $title Title of post.
      * @param string $url Link to post.
-     * @param bool|true $send_replies Send comment replies to the current user's inbox. True to enable, false to disable.
-     * @return mixed New post's thing ID if successful. Error object if failed.
+     * @param bool $send_replies Send comment replies to the current user's inbox. True to enable, false to disable.
+     * @param bool $distinguish Whether or not it should be mod distinguished (for modded subreddits only).
+     * @return object Response to API call.
      */
-    public function submitLinkPost($subreddit, $title, $url, $send_replies = true) {
+    public function submitLinkPost($subreddit, $title, $url, $send_replies = true, $distinguish = false) {
         $params = array(
             'api_type' => 'json',
             'extension' => 'json',
@@ -474,11 +397,11 @@ class Phapper {
 
         $response = $this->apiCall("/api/submit", 'POST', $params);
 
-        if (isset($response->json->data->name)) {
-            return $response->json->data->name;
+        if ($distinguish && isset($response->json->data->name)) {
+            $this->distinguish($response->json->data->name, true);
         }
 
-        return $response->json;
+        return $response;
     }
 
     /**
@@ -486,10 +409,11 @@ class Phapper {
      * @param string $subreddit Subreddit in which to post.
      * @param string $title Title of post.
      * @param string|null $text Text of post.
-     * @param bool|true $send_replies Send comment replies to the current user's inbox. True to enable, false to disable.
-     * @return mixed New post's thing ID if successful. Error object if failed.
+     * @param bool $send_replies Send comment replies to the current user's inbox. True to enable, false to disable.
+     * @param bool $distinguish Whether or not it should be mod distinguished (for modded subreddits only).
+     * @return object Response to API call.
      */
-    public function submitTextPost($subreddit, $title, $text = null, $send_replies = true) {
+    public function submitTextPost($subreddit, $title, $text = null, $send_replies = true, $distinguish = false) {
         $params = array(
             'api_type' => 'json',
             'extension' => 'json',
@@ -503,19 +427,19 @@ class Phapper {
 
         $response = $this->apiCall("/api/submit", 'POST', $params);
 
-        if (isset($response->json->data->name)) {
-            return $response->json->data->name;
+        if ($distinguish && isset($response->json->data->name)) {
+            $this->distinguish($response->json->data->name, true);
         }
 
-        return $response->json;
+        return $response;
     }
 
     /**
      * Comments on an object.
      * @param string $parent Thing ID of parent object on which to comment. Could be link, text post, or comment.
      * @param string $text Comment text.
-     * @param bool|false $distinguish Whether or not it should be mod distinguished (for modded subreddits only).
-     * @return string|null Comment ID if success. Null if failed.
+     * @param bool $distinguish Whether or not it should be mod distinguished (for modded subreddits only).
+     * @return object Response to API call.
      */
     public function comment($parent, $text, $distinguish = false) {
         $params = array(
@@ -526,28 +450,27 @@ class Phapper {
 
         $response = $this->apiCall("/api/comment", 'POST', $params);
 
-        if (isset($response->error)) {
-            return null;
+        if ($distinguish && isset($response->json->data->things[0]->data->name)) {
+            $dist_response = $this->distinguish($response->json->data->things[0]->data->name, true);
+            if (isset($dist_response->json->errors) && count($dist_response->json->errors) == 0) {
+                $response = $dist_response;
+            }
         }
 
-        $id = $response->json->data->things[0]->data->name;
-        if ($distinguish) {
-            $this->distinguish($id, true);
-        }
-
-        return $id;
+        return $response;
     }
 
     /**
      * Deletes a post or comment.
      * @param string $thing_id Thing ID of object to delete. Could be link, text post, or comment.
+     * @return object Response to API call, probably empty.
      */
     public function delete($thing_id) {
         $params = array(
             'id' => $thing_id
         );
 
-        $this->apiCall("/api/del", 'POST', $params);
+        return $this->apiCall("/api/del", 'POST', $params);
     }
 
 
@@ -555,7 +478,7 @@ class Phapper {
      * Edits the text of a comment or text post.
      * @param string $thing_id Thing ID of text object to edit. Could be text post or comment.
      * @param string $text New text to replace the old.
-     * @return mixed|null Object of thing that was just edited. Null if failed (such as editing a link post).
+     * @return object Response to API call, probably object of thing that was just edited.
      */
     public function editText($thing_id, $text) {
         $params = array(
@@ -564,19 +487,13 @@ class Phapper {
             'thing_id' => $thing_id
         );
 
-        $response = $this->apiCall("/api/editusertext", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response->json->data->things[0]->data;
+        return $this->apiCall("/api/editusertext", 'POST', $params);
     }
 
     /**
      * Hides a post from user's listings.
      * @param string|array $thing_ids String or array of thing ID's of links to hide.
-     * @return bool|null Returns true if success. Null if failed.
+     * @return bool|null Response to API call.
      */
     public function hide($thing_ids) {
         if (is_array($thing_ids)) {
@@ -587,13 +504,7 @@ class Phapper {
             'id' => $thing_ids
         );
 
-        $response = $this->apiCall("/api/hide", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return true;
+        return $this->apiCall("/api/hide", 'POST', $params);
     }
 
     /**
@@ -610,19 +521,13 @@ class Phapper {
             'id' => $thing_ids
         );
 
-        $response = $this->apiCall("/api/unhide", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return true;
+        return $this->apiCall("/api/unhide", 'POST', $params);
     }
 
     /**
      * Gives a listing of information on objects.
      * @param string|array $thing_ids String or array of single or multiple thing ID's.
-     * @return mixed Listing object if success. Null if failed.
+     * @return object Listing objects requested.
      */
     public function getInfo($thing_ids) {
         if (is_array($thing_ids)) {
@@ -633,62 +538,69 @@ class Phapper {
             'id' => $thing_ids
         );
 
-        $response = $this->apiCall("/api/info", 'GET', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response->data;
+        return $this->apiCall("/api/info", 'GET', $params);
     }
 
     /**
      * Marks a post as NSFW.
      * @param string $thing_id Thing ID of post to mark as NSFW.
-     * @return bool|null Returns true of success. Null if failed.
+     * @return object Response to API call, probably empty.
      */
     public function markNSFW($thing_id) {
         $params = array(
             'id' => $thing_id
         );
 
-        $response = $this->apiCall("/api/marknsfw", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return true;
+        return $this->apiCall("/api/marknsfw", 'POST', $params);
     }
 
     /**
      * Unmarks a post as NSFW.
      * @param string $thing_id Thing ID of post to unmark as NSFW.
-     * @return bool|null Returns true of success. Null if failed.
+     * @return object Response to API call, probably empty.
      */
     public function unmarkNSFW($thing_id) {
         $params = array(
             'id' => $thing_id
         );
 
-        $response = $this->apiCall("/api/unmarknsfw", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return true;
+        return $this->apiCall("/api/unmarknsfw", 'POST', $params);
     }
 
-    public function getMoreChildren($children) {
-        // TODO
+    /**
+     * Get comments in a tree that are hidden by "load more comments".
+     * NOTE: Only make one request for this at a time. Higher concurrency will result in an error.
+     * @param string $link_id Fullname (thing ID) of link/post of the comment tree.
+     * @param string|array $comment_ids ID36 or fullname of one or more parent comments for which to retrieve children.
+     * @return object Complex object containing comment's children.
+     */
+    public function getCommentChildren($link_id, $comment_ids) {
+        if (!is_array($comment_ids)) {
+            $comment_ids = explode(',', $comment_ids);
+        }
+
+        for ($i=0; $i<count($comment_ids); $i++) {
+            if (strpos($comment_ids[$i], 't1_') === 0) {
+                $comment_ids[$i] = substr($comment_ids[$i], 3);
+            }
+        }
+
+        $comment_ids = implode(',', $comment_ids);
+
+        $params = array(
+            'api_type' => 'json',
+            'children' => $comment_ids,
+            'link_id' => $link_id
+        );
+
+        return $this->apiCall("/api/morechildren", 'GET', $params);
     }
 
     /**
      * Reports a post, comment, or message.
      * @param string $thing_id Thing ID of object to report.
      * @param null $reason The reason for the report. Must be <100 characters.
-     * @return mixed Array of errors. Length of 0 if successful.
+     * @return object Response to API call.
      */
     public function report($thing_id, $reason = null) {
         $params = array(
@@ -697,15 +609,14 @@ class Phapper {
             'thing_id' => $thing_id
         );
 
-        $response = $this->apiCall("/api/report", 'POST', $params);
-
-        return $response->json->errors;
+        return $this->apiCall("/api/report", 'POST', $params);
     }
 
     /**
      * Saves a post or comment in the selected category.
      * @param string $thing_id Thing ID of object to save. Can be post or comment.
      * @param null $category Category in which to save object. Defaults to none.
+     * @return object Response to API call, probably empty.
      */
     public function save($thing_id, $category = null) {
         $params = array(
@@ -713,48 +624,49 @@ class Phapper {
             'id' => $thing_id
         );
 
-        $this->apiCall("/api/save", 'POST', $params);
+        return $this->apiCall("/api/save", 'POST', $params);
     }
 
     /**
      * Unsaves a post or comment from the current user's saved posts.
      * @param string $thing_id Thing ID of object to unsave. Can be post or comment.
+     * @return object Response to API call, probably empty.
      */
     public function unsave($thing_id) {
         $params = array(
             'id' => $thing_id
         );
 
-        $this->apiCall("/api/unsave", 'POST', $params);
+        return $this->apiCall("/api/unsave", 'POST', $params);
     }
 
     /**
      * Gets the current user's save categories.
-     * @return mixed Array of category objects.
+     * @return object Contains an array of categories.
      */
     public function getSavedCategories() {
-        $response = $this->apiCall("/api/saved_categories", 'GET');
-
-        return $response->categories;
+        return $this->apiCall("/api/saved_categories", 'GET');
     }
 
     /**
      * Toggles whether or not the current user should receive replies to a specific post or comment to their inbox.
      * @param string $thing_id Thing ID of object to toggle.
-     * @param bool|true $state State of inbox replies. True to receive, false for not.
+     * @param bool $state State of inbox replies. True to receive, false for not.
+     * @return object Response to API call, probably empty.
      */
-    public function toggleInboxReplies($thing_id, $state = true) {
+    public function sendInboxReplies($thing_id, $state = true) {
         $params = array(
             'id' => $thing_id,
             'state' => ($state) ? 'true' : 'false'
         );
 
-        $this->apiCall("/api/sendreplies", 'POST', $params);
+        return $this->apiCall("/api/sendreplies", 'POST', $params);
     }
 
     /**
      * Store that the current user has visited a certain link.
      * @param string|array $thing_ids String or array of thing ID's of links to store as visited.
+     * @return object Response to API call, probably empty.
      */
     public function storeVisits($thing_ids) {
         if (is_array($thing_ids)) {
@@ -765,7 +677,7 @@ class Phapper {
             'links' => $thing_ids
         );
 
-        $this->apiCall("/api/store_visits", 'POST', $params);
+        return $this->apiCall("/api/store_visits", 'POST', $params);
     }
 
     /**
@@ -774,6 +686,7 @@ class Phapper {
      *
      * Upvotes a post or comment.
      * @param string $thing_id Thing ID of object to upvote.
+     * @return object Response to API call, probably empty.
      */
     public function upvote($thing_id) {
         $params = array(
@@ -781,12 +694,13 @@ class Phapper {
             'id' => $thing_id
         );
 
-        $this->apiCall("/api/vote", 'POST', $params);
+        return $this->apiCall("/api/vote", 'POST', $params);
     }
 
     /**
      * Downvotes a post or comment.
      * @param string $thing_id Thing ID of object to downvote.
+     * @return object Response to API call, probably empty.
      */
     public function downvote($thing_id) {
         $params = array(
@@ -794,12 +708,13 @@ class Phapper {
             'id' => $thing_id
         );
 
-        $this->apiCall("/api/vote", 'POST', $params);
+        return $this->apiCall("/api/vote", 'POST', $params);
     }
 
     /**
      * Resets the current user's vote on a post or comment.
      * @param string $thing_id Thing ID of object to reset vote.
+     * @return object Response to API call, probably empty.
      */
     public function unvote($thing_id) {
         $params = array(
@@ -807,7 +722,7 @@ class Phapper {
             'id' => $thing_id
         );
 
-        $this->apiCall("/api/vote", 'POST', $params);
+        return $this->apiCall("/api/vote", 'POST', $params);
     }
 
     //-----------------------------------------
@@ -1007,22 +922,24 @@ class Phapper {
     /**
      * Toggles contest mode on a post.
      * @param string $thing_id Thing ID of post to toggle contest mode.
-     * @param bool|false $state True to enable contest mode, false to disable.
+     * @param bool $state True to enable contest mode, false to disable.
+     * @return object Response to API call, probably empty.
      */
-    public function toggleContestMode($thing_id, $state = false) {
+    public function setContestMode($thing_id, $state = true) {
         $params = array(
             'api_type' => 'json',
             'id' => $thing_id,
             'state' => ($state) ? 'true' : 'false'
         );
 
-        $this->apiCall("/api/set_contest_mode", 'POST', $params);
+        return $this->apiCall("/api/set_contest_mode", 'POST', $params);
     }
 
     /**
      * Stickies a post at the top of the subreddit.
      * @param string $thing_id Thing ID of post to sticky.
      * @param int $num Position of new sticky. 1 for top, 2 for bottom. Defaults to 2.
+     * @return object Response to API call.
      */
     public function stickyPost($thing_id, $num = 2) {
         $params = array(
@@ -1032,12 +949,13 @@ class Phapper {
             'state' => 'true'
         );
 
-        $this->apiCall("/api/set_subreddit_sticky", 'POST', $params);
+        return $this->apiCall("/api/set_subreddit_sticky", 'POST', $params);
     }
 
     /**
      * Unsticky a post from the top of a subreddit.
      * @param string $thing_id Thing ID of post to unsticky.
+     * @return object Response to API call.
      */
     public function unstickyPost($thing_id) {
         $params = array(
@@ -1047,29 +965,45 @@ class Phapper {
             'state' => 'false'
         );
 
-        $this->apiCall("/api/set_subreddit_sticky", 'POST', $params);
+        return $this->apiCall("/api/set_subreddit_sticky", 'POST', $params);
     }
 
     /**
      * Sets the default sort of a link's comments.
      * @param string $thing_id Thing ID of link to set suggested sort.
-     * @param string $sort Sort method. One of: confidence, top, new, hot, controversial, old, random, qa, blank
+     * @param string $sort Sort method. One of: 'confidence', 'top', 'new', 'hot', 'controversial', 'old', 'random', 'qa'
+     * @return object Response to API call, probably empty.
      */
-    public function setSuggestedSort($thing_id, $sort = 'blank') {
+    public function setSuggestedSort($thing_id, $sort) {
         $params = array(
             'api_type' => 'json',
             'id' => $thing_id,
             'sort' => $sort
         );
 
-        $this->apiCall("/api/set_suggested_sort", 'POST', $params);
+        return $this->apiCall("/api/set_suggested_sort", 'POST', $params);
+    }
+
+    /**
+     * Clears the default sort of a link's comments.
+     * @param string $thing_id Thing ID of link to clear suggested sort.
+     * @return object Response to API call, probably empty.
+     */
+    public function clearSuggestedSort($thing_id) {
+        $params = array(
+            'api_type' => 'json',
+            'id' => $thing_id,
+            'sort' => 'blank'
+        );
+
+        return $this->apiCall("/api/set_suggested_sort", 'POST', $params);
     }
 
     /**
      * Mod distinguish a post or comment.
      * @param string $thing_id Thing ID of object to distinguish.
-     * @param bool|true $how True to set [M] distinguish. False to undistinguish.
-     * @return mixed|null Returns details of object distinguished on success. Null if failed.
+     * @param bool $how True to set [M] distinguish. False to undistinguish.
+     * @return object Response to API call.
      */
     public function distinguish($thing_id, $how = true) {
         $params = array(
@@ -1079,10 +1013,6 @@ class Phapper {
         );
 
         $response = $this->apiCall("/api/distinguish", 'POST', $params);
-
-        if (isset($response->error)) {
-            return null;
-        }
 
         return $response;
     }
@@ -1437,10 +1367,6 @@ class Phapper {
 
         $response = $this->apiCall("/r/$subreddit/api/unfriend", 'POST', $params);
 
-        if (isset($response->error)) {
-            return null;
-        }
-
         return $response;
     }
 
@@ -1495,9 +1421,9 @@ class Phapper {
 
         $response = $this->apiCall("/r/$subreddit/api/friend", 'POST', $params);
 
-        if (isset($response->error)) {
-            return null;
-        }
+//        if (isset($response->error)) {
+//            return null;
+//        }
 
         return $response;
     }
