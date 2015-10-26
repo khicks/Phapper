@@ -73,6 +73,22 @@ class Phapper {
     }
 
     /**
+     * Update the current user's preferences.
+     * @param array $settings An array of key-value pairs to update. Use getMyPrefs() to see possible values.
+     * @return object Object representing user's new preferences.
+     */
+    public function updateMyPrefs($settings) {
+        $prefs = $this->getMyPrefs();
+        $params = get_object_vars($prefs);
+
+        foreach ($settings as $key=>$value) {
+            $params[$key] = $value;
+        }
+
+        return $this->apiCall("/api/v1/me/prefs", 'PATCH', json_encode($params), true);
+    }
+
+    /**
      * Gets current user's trophies.
      * @return object Listing of current user's trophies.
      */
@@ -103,7 +119,7 @@ class Phapper {
     /**
      * Retrieves a list of all assigned user flair in the specified subreddit. Must be a mod of that subreddit.
      * @param string $subreddit Name of subreddit from which to retrieve flair list.
-     * @param int $limit Upper limit of number of items to retrieve. Upper limit is 1000.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 1000.
      * @param string|null $after Use 'next' attribute of previous call to retrieve next page.
      * @param string|null $before Retrieve only flairs that are higher than this user ID on the list.
      * @return object Listing of users that are assigned flair in the specified subreddit.
@@ -840,7 +856,7 @@ class Phapper {
     /**
      * Retrieves the hot listing for the optionally specified subreddit.
      * @param string|null $subreddit Subreddit of listing to retrieve. If none, defaults to front page.
-     * @param int $limit Upper limit of number of items to retrieve. Maxiumum is 100.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
      * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
      * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
      * @return mixed|null Returns listing object on success. Null if failed.
@@ -852,7 +868,7 @@ class Phapper {
     /**
      * Retrieves the new listing for the optionally specified subreddit.
      * @param string|null $subreddit Subreddit of listing to retrieve. If none, defaults to front page.
-     * @param int $limit Upper limit of number of items to retrieve. Maxiumum is 100.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
      * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
      * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
      * @return mixed|null Returns listing object on success. Null if failed.
@@ -898,7 +914,7 @@ class Phapper {
     }
 
     /**
-     * Retreives a list of links that are the result of a search of the specified link's title.
+     * Retrieves a list of links that are the result of a search of the specified link's title.
      * @param string $thing_id ID36 or fullname of link to search with.
      * @param int $limit Upper limit of the number of links to retrieve. Maximum is 100.
      * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
@@ -1145,7 +1161,7 @@ class Phapper {
      * Retrieves modmail messages.
      * @param string $subreddit Subreddit for which to retrieve modmail. 'mod' means all moderated subreddits.
      * @param bool $messages_read Whether or not to turn off the orangered mail icon. Does not mark each message as read.
-     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
+     * @param int $limit Upper limit of the number of message threads to retrieve. Maximum of 100.
      * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
      * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
      * @return object Listing of modmail messages.
@@ -1301,7 +1317,7 @@ class Phapper {
      * Private function to unify process of retrieving several subreddit mod listings.
      * @param string $subreddit Subreddit for which to retrieve a listing.
      * @param string $location One of 'reports', 'spam', 'modqueue', 'unmoderated', 'edited'.
-     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
      * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
      * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
      * @param string|null $only Obtain only links or comments. One of 'links' or 'comments'. Null for both.
@@ -1323,7 +1339,7 @@ class Phapper {
     /**
      * Retrieves a list of things that have been reported in the specified subreddit.
      * @param string $subreddit Subreddit of items to retrieve. All moderated subreddits by default.
-     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
      * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
      * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
      * @param null $only Obtain only links or comments. One of 'links' or 'comments'. Null for both.
@@ -1336,7 +1352,7 @@ class Phapper {
     /**
      * Retrieves a list of things that have been marked as spam in the specified subreddit.
      * @param string $subreddit Subreddit of items to retrieve. All moderated subreddits by default.
-     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
      * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
      * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
      * @param null $only Obtain only links or comments. One of 'links' or 'comments'. Null for both.
@@ -1349,7 +1365,7 @@ class Phapper {
     /**
      * Retrieves a list of things that have been placed in the modqueue of the specified subreddit.
      * @param string $subreddit Subreddit of items to retrieve. All moderated subreddits by default.
-     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
      * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
      * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
      * @param null $only Obtain only links or comments. One of 'links' or 'comments'. Null for both.
@@ -1362,7 +1378,7 @@ class Phapper {
     /**
      * Retrieves a list of things that have not been moderated in the specified subreddit.
      * @param string $subreddit Subreddit of items to retrieve. All moderated subreddits by default.
-     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
      * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
      * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
      * @return mixed|null Returns a listing object with link and/or comment children.
@@ -1374,7 +1390,7 @@ class Phapper {
     /**
      * Retrieves a list of comments that have been edited by the author in the specified subreddit.
      * @param string $subreddit Subreddit of items to retrieve. All moderated subreddits by default.
-     * @param int $limit Limit of the number of message threads to retrieve. Maximum of 100.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
      * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
      * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
      * @return mixed|null Returns a listing object with link and/or comment children.
@@ -1412,7 +1428,6 @@ class Phapper {
     /**
      * Removes a post or comment from a subreddit.
      * @param string $thing_id Thing ID of object to remove.
-     * @param bool $spam Whether or not the object should be removed as spam.
      * @return object Response to API call, probably empty.
      */
     public function remove($thing_id) {
@@ -1427,7 +1442,6 @@ class Phapper {
     /**
      * Removes a post or comment from a subreddit as spam.
      * @param string $thing_id Thing ID of object to remove.
-     * @param bool $spam Whether or not the object should be removed as spam.
      * @return object Response to API call, probably empty.
      */
     public function spam($thing_id) {
@@ -1473,12 +1487,12 @@ class Phapper {
     public function leaveContributor($subreddit) {
         $subreddit_info = $this->aboutSubreddit($subreddit);
 
-        if (!isset($subreddit_info->name)) {
+        if (!isset($subreddit_info->data->name)) {
             return null;
         }
 
         $params = array(
-            'id' => $subreddit_info->name
+            'id' => $subreddit_info->data->name
         );
 
         return $this->apiCall("/api/leavecontributor", 'POST', $params);
@@ -1492,12 +1506,12 @@ class Phapper {
     public function leaveModerator($subreddit) {
         $subreddit_info = $this->aboutSubreddit($subreddit);
 
-        if (!isset($subreddit_info->name)) {
+        if (!isset($subreddit_info->data->name)) {
             return null;
         }
 
         $params = array(
-            'id' => $subreddit_info->name
+            'id' => $subreddit_info->data->name
         );
 
         return $this->apiCall("/api/leavemoderator", 'POST', $params);
@@ -1510,7 +1524,7 @@ class Phapper {
      * @param string|null $note Ban note in banned users list. Not shown to user.
      * @param string|null $message Ban message sent to user.
      * @param int|null $duration Duration of ban in days.
-     * @return object Response of API call.
+     * @return object Response to API call.
      */
     public function ban($subreddit, $user, $note = null, $message = null, $duration = null) {
         $params = array(
@@ -1529,7 +1543,7 @@ class Phapper {
      * Unban a user from a subreddit.
      * @param string $subreddit Subreddit from which to unban the user.
      * @param string $user Username of user to unban.
-     * @return object Response of API call, probably empty.
+     * @return object Response to API call, probably empty.
      */
     public function unban($subreddit, $user) {
         $params = array(
@@ -1544,7 +1558,7 @@ class Phapper {
      * Add a user as a contributor to a subreddit.
      * @param string $subreddit Subreddit to which to add user.
      * @param string $user Username of user to add.
-     * @return object Response of API call.
+     * @return object Response to API call.
      */
     public function addContributor($subreddit, $user) {
         $params = array(
@@ -1560,7 +1574,7 @@ class Phapper {
      * Remove a user as a contributor from a subreddit.
      * @param string $subreddit Subreddit from which to remove the user.
      * @param string $user Username of user to remove.
-     * @return object Response of API call, probably empty..
+     * @return object Response to API call, probably empty..
      */
     public function removeContributor($subreddit, $user) {
         $params = array(
@@ -1582,7 +1596,7 @@ class Phapper {
      * @param bool $perm_mail If the user should have the 'mail' permission.
      * @param bool $perm_posts If the user should have the 'posts' permission.
      * @param bool $perm_wiki If the user should have the 'wiki' permission.
-     * @return object Response of API call.
+     * @return object Response to API call.
      */
     public function inviteModerator($subreddit, $user, $perm_all = true, $perm_access = false, $perm_config = false, $perm_flair = false, $perm_mail = false, $perm_posts = false, $perm_wiki = false) {
         $permissions = array();
@@ -1627,7 +1641,7 @@ class Phapper {
      * Remove an existing moderator as a moderator from a subreddit. To revoke an invitation, use uninviteModerator().
      * @param string $subreddit Subreddit from which to remove a user as a moderator.
      * @param string $user Username of user to remove
-     * @return object Response of API call, probably empty.
+     * @return object Response to API call, probably empty.
      */
     public function removeModerator($subreddit, $user) {
         $params = array(
@@ -1642,7 +1656,7 @@ class Phapper {
      * Revoke a user's pending invitation to moderate a subreddit. To remove an existing moderator, use removeModerator().
      * @param string $subreddit Subreddit from which to revoke a user's invitation.
      * @param string $user User whose invitation to revoke.
-     * @return object Response of API call, probably empty.
+     * @return object Response to API call, probably empty.
      */
     public function uninviteModerator($subreddit, $user) {
         $params = array(
@@ -1664,7 +1678,7 @@ class Phapper {
      * @param bool $perm_mail If the user should have the 'mail' permission.
      * @param bool $perm_posts If the user should have the 'posts' permission.
      * @param bool $perm_wiki If the user should have the 'wiki' permission.
-     * @return object Response of API call.
+     * @return object Response to API call.
      */
     public function setModeratorPermissions($subreddit, $user, $perm_all = true, $perm_access = false, $perm_config = false, $perm_flair = false, $perm_mail = false, $perm_posts = false, $perm_wiki = false) {
         $permissions = array();
@@ -1716,7 +1730,7 @@ class Phapper {
      * @param bool $perm_mail If the user should have the 'mail' permission.
      * @param bool $perm_posts If the user should have the 'posts' permission.
      * @param bool $perm_wiki If the user should have the 'wiki' permission.
-     * @return object Response of API call.
+     * @return object Response to API call.
      */
     public function setInvitationPermissions($subreddit, $user, $perm_all = true, $perm_access = false, $perm_config = false, $perm_flair = false, $perm_mail = false, $perm_posts = false, $perm_wiki = false) {
         $permissions = array();
@@ -1763,7 +1777,7 @@ class Phapper {
      * @param string $user Username of user to ban.
      * @param string|null $note Ban note in banned users list. Not shown to user.
      * @param int|null $duration Duration of ban in days.
-     * @return object Response of API call.
+     * @return object Response to API call.
      */
     public function wikiBan($subreddit, $user, $note = null, $duration = null) {
         $params = array(
@@ -1781,7 +1795,7 @@ class Phapper {
      * Unban a user from a subreddit's wiki.
      * @param string $subreddit Subreddit from which to unban the user.
      * @param string $user Username of user to unban.
-     * @return object Response of API call, probably empty.
+     * @return object Response to API call, probably empty.
      */
     public function wikiUnban($subreddit, $user) {
         $params = array(
@@ -1845,7 +1859,7 @@ class Phapper {
      * Unmute a user in the specified subreddit by username.
      * @param string $subreddit Subreddit to which to unmute the user.
      * @param string $user Username of user to unmute.
-     * @return object Response of API call, probably empty.
+     * @return object Response to API call, probably empty.
      */
     public function unmute($subreddit, $user) {
         $params = array(
@@ -1860,7 +1874,7 @@ class Phapper {
     /**
      * Mute a user from a subreddit based on the thing ID of a message they sent.
      * @param string $thing_id Thing ID of the message author to be muted.
-     * @return object Repsonse to API call, probably empty.
+     * @return object Response to API call, probably empty.
      */
     public function muteUserByMessage($thing_id) {
         $params = array(
@@ -1873,7 +1887,7 @@ class Phapper {
     /**
      * Unmute a user from a subreddit based on the thing ID of a message they sent.
      * @param string $thing_id Thing ID of the message author to be unmuted.
-     * @return object Repsonse to API call, probably empty.
+     * @return object Response to API call, probably empty.
      */
     public function unmuteUserByMessage($thing_id) {
         $params = array(
@@ -1920,7 +1934,8 @@ class Phapper {
             'restrict_sr' => (!empty($subreddit)) ? 'on' : 'off',
             'show' => 'all',
             'sort' => $sort,
-            't' => $time
+            't' => $time,
+            'type' => $type
         );
 
         return $this->apiCall($subreddit_prefix."/search", 'GET', $params);
@@ -1932,53 +1947,695 @@ class Phapper {
     /**
      * Retrieves information about the specified subreddit, including subreddit ID.
      * @param string $subreddit Name of subreddit for which to retrieve information.
-     * @return mixed|null Returns an object with subreddit data on success. Null if failed.
+     * @return object Contains subreddit information.
      */
     public function aboutSubreddit($subreddit) {
-        $response = $this->apiCall("/r/$subreddit/about.json");
-
-        if (isset($response->error)) {
-            return null;
-        }
-
-        return $response->data;
+        return $this->apiCall("/r/$subreddit/about.json");
     }
 
     /**
-     * Retrieve a list of the subreddit's settings.
-     * @param string $subreddit The subreddit to retrieve.
-     * @return mixed|null An object with subreddit settings as properties. Null if failed.
+     * Private function for obtaining a subreddit's /about/$location user listings.
+     * Using pagination will result in the last item of the previous page appearing as the first item of the next page.
+     * @param string $location One of 'banned', 'muted', 'wikibanned', 'contributors', 'wikicontributors', 'moderators'
+     * @param string $subreddit Subreddit for which to obtain the listing.
+     * @param string|null $user Jump to a specific user.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of users.
      */
-    public function getSubredditSettings($subreddit) {
-        $response = $this->apiCall("/r/$subreddit/about/edit.json");
+    private function getSubredditUsers($location, $subreddit, $user, $limit, $after, $before) {
+        $params = array(
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'show' => 'all',
+            'user' => $user
+        );
 
-        if (isset($response->error)) {
+        return $this->apiCall("/r/$subreddit/about/$location.json", 'GET', $params);
+    }
+
+    /**
+     * Retrieve a list of banned users from the specified subreddit. Must be a mod with access permissions.
+     * Using pagination will result in the last item of the previous page appearing as the first item of the next page.
+     * @param string $subreddit Subreddit for which to retrieve banned users.
+     * @param string|null $user Jump to a specific user. Will return an empty list if user is not on list.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of users.
+     */
+    public function getBanned($subreddit, $user = null, $limit = 25, $after = null, $before = null) {
+        return $this->getSubredditUsers('banned', $subreddit, $user, $limit, $after, $before);
+    }
+
+    /**
+     * Retrieve a list of muted users from the specified subreddit. Must be a mod with access permissions.
+     * Using pagination will result in the last item of the previous page appearing as the first item of the next page.
+     * @param string $subreddit Subreddit for which to retrieve muted users.
+     * @param string|null $user Jump to a specific user. Will return an empty list if user is not on list.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of users.
+     */
+    public function getMuted($subreddit, $user = null, $limit = 25, $after = null, $before = null) {
+        return $this->getSubredditUsers('muted', $subreddit, $user, $limit, $after, $before);
+    }
+
+    /**
+     * Retrieve a list of wiki banned users from the specified subreddit. Must be a mod with access permissions.
+     * Using pagination will result in the last item of the previous page appearing as the first item of the next page.
+     * @param string $subreddit Subreddit for which to retrieve wiki banned users.
+     * @param string|null $user Jump to a specific user. Will return an empty list if user is not on list.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of users.
+     */
+    public function getWikiBanned($subreddit, $user = null, $limit = 25, $after = null, $before = null) {
+        return $this->getSubredditUsers('wikibanned', $subreddit, $user, $limit, $after, $before);
+    }
+
+    /**
+     * Retrieve a list of approved submitters from the specified subreddit. Must be a mod or approved submitter in subreddit.
+     * Using pagination will result in the last item of the previous page appearing as the first item of the next page.
+     * @param string $subreddit Subreddit for which to retrieve approved submitters.
+     * @param string|null $user Jump to a specific user. Will return an empty list if user is not on list.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of users.
+     */
+    public function getContributors($subreddit, $user = null, $limit = 25, $after = null, $before = null) {
+        return $this->getSubredditUsers('contributors', $subreddit, $user, $limit, $after, $before);
+    }
+
+    /**
+     * Retrieve a list of approved wiki contributors from the specified subreddit. Must be a mod or approved wiki contributor in subreddit.
+     * Using pagination will result in the last item of the previous page appearing as the first item of the next page.
+     * @param string $subreddit Subreddit for which to retrieve approved wiki contributors.
+     * @param string|null $user Jump to a specific user. Will return an empty list if user is not on list.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of users.
+     */
+    public function getWikiContributors($subreddit, $user = null, $limit = 25, $after = null, $before = null) {
+        return $this->getSubredditUsers('wikicontributors', $subreddit, $user, $limit, $after, $before);
+    }
+
+    /**
+     * Retrieve a list of moderators from the specified subreddit. Must have read access to subreddit.
+     * This function does not use pagination, but it's here anyway in case that's changed in the future.
+     * @param string $subreddit Subreddit for which to retrieve moderators.
+     * @param string|null $user Jump to a specific user. Will return an empty list if user is not on list.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of users.
+     */
+    public function getModerators($subreddit, $user = null, $limit = 25, $after = null, $before = null) {
+        return $this->getSubredditUsers('moderators', $subreddit, $user, $limit, $after, $before);
+    }
+
+    /**
+     * Upload an image to the specified subreddit.
+     * @param string $subreddit Subreddit to which to upload image.
+     * @param string $file Relative or absolute path of file to upload from local machine.
+     * @param string $name If $upload_type is 'img', assign the image this name. Ignored otherwise.
+     * @param string $upload_type One of 'img', 'header', 'icon', 'banner'. As of now, 'icon' and 'banner' will result in an error.
+     * @param string $image_type One of 'png' or 'jpg'.
+     * @return object Response to API call. On success, shows image URL. Null if the local file cannot be found.
+     */
+    public function uploadSubredditImage($subreddit, $file, $name, $upload_type = 'img', $image_type = 'png') {
+        if (!realpath($file)) {
             return null;
         }
 
-        return $response->data;
+        $params = array(
+            'file' => '@'.realpath($file),
+            'img_type' => $image_type,
+            'name' => $name,
+            'upload_type' => $upload_type
+        );
+
+        return $this->apiCall("/r/$subreddit/api/upload_sr_img", 'POST', $params);
+    }
+
+    /**
+     * Remove the subreddit's custom mobile banner.
+     * @param string $subreddit Subreddit from which to remove the banner.
+     * @return object Response to API call.
+     */
+    public function deleteSubredditBanner($subreddit) {
+        $params = array(
+            'api_type' => 'json'
+        );
+
+        return $this->apiCall("/r/$subreddit/api/delete_sr_banner", 'POST', $params);
+    }
+
+    /**
+     * Remove the subreddit's custom header image.
+     * @param string $subreddit Subreddit from which to remove the header image.
+     * @return object Response to API call.
+     */
+    public function deleteSubredditHeaderImage($subreddit) {
+        $params = array(
+            'api_type' => 'json'
+        );
+
+        return $this->apiCall("/r/$subreddit/api/delete_sr_header", 'POST', $params);
+    }
+
+    /**
+     * Remove the subreddit's custom mobile icon.
+     * @param string $subreddit Subreddit from which to remove the icon.
+     * @return object Response to API call.
+     */
+    public function deleteSubredditIcon($subreddit) {
+        $params = array(
+            'api_type' => 'json'
+        );
+
+        return $this->apiCall("/r/$subreddit/api/delete_sr_icon", 'POST', $params);
+    }
+
+    /**
+     * Remove an image from the subreddit's custom image set.
+     * @param string $subreddit Subreddit from which to remove the image.
+     * @param string $image_name The name of the image to delete.
+     * @return object Response to API call.
+     */
+    public function deleteSubredditImage($subreddit, $image_name) {
+        $params = array(
+            'api_type' => 'json',
+            'img_name' => $image_name
+        );
+
+        return $this->apiCall("/r/$subreddit/api/delete_sr_img", 'POST', $params);
+    }
+
+    /**
+     * Retrieve a list of recommended subreddits based on the names of existing ones.
+     * @param string $subreddits Comma-delimited list of subreddits on which to base recommendations.
+     * @param string|null $omit Omit these specific subreddits from results.
+     * @return array Recommended subreddit objects containing subreddit names.
+     */
+    public function getRecommendedSubreddits($subreddits, $omit = null) {
+        if (is_array($subreddits)) {
+            $subreddits = implode(',', $subreddits);
+        }
+
+        $params = array(
+            'omit' => $omit,
+            'srnames' => $subreddits
+        );
+
+        return $this->apiCall("/api/recommend/sr/$subreddits/.json", 'GET', $params);
+    }
+
+    /**
+     * List subreddit names that begin with a query string.
+     * @param string $query Search for subreddits that start with this. Maximum 50 characters, all printable.
+     * @param bool $include_nsfw Include subreddits that are set as NSFW (over_18).
+     * @param bool $exact Only return exact match.
+     * @return object Contains an array of subreddit names.
+     */
+    public function searchSubredditsByName($query, $include_nsfw = true, $exact = false) {
+        $params = array(
+            'exact' => ($exact) ? 'true' : 'false',
+            'include_over_18' => ($include_nsfw) ? 'true' : 'false',
+            'query' => $query
+        );
+
+        return $this->apiCall("/api/search_reddit_names", 'POST', $params);
     }
 
     /**
      * Retrieves the "submitting to /r/$subreddit" text for the selected subreddit.
-     * @param string $subreddit Name of subreddit to use.
-     * @return string|null Returns a string of the subreddit's submit_text. 0-length string if none, null if failed.
+     * @param string $subreddit Name of subreddit from which to obtain submit text.
+     * @return object Response to API call, containing the subreddit's submit_text.
      */
     public function getSubmitText($subreddit) {
-        $response = $this->apiCall("/r/$subreddit/api/submit_text");
+        return $this->apiCall("/r/$subreddit/api/submit_text");
+    }
 
-        if (!isset($response->submit_text)) {
+    /**
+     * Get a subreddit's stylesheet.
+     * @param string $subreddit Subreddit of which to retrieve stylesheet.
+     * @return object Wikipage object of subreddit's stylesheet, including text and list of images.
+     */
+    public function getSubredditStylesheet($subreddit) {
+        return $this->apiCall("/r/$subreddit/wiki/config/stylesheet.json");
+    }
+
+    /**
+     * Set a subreddit's stylesheet.
+     * @param string $subreddit Subreddit of which to set stylesheet.
+     * @param string $contents Contents of stylesheet, probably pretty long.
+     * @param string|null $reason Since the stylesheet is a wiki page, optionally provide a reason for editing.
+     * @return object Response to API call, possibly containing errors if invalid CSS.
+     */
+    public function setSubredditStylesheet($subreddit, $contents, $reason = null) {
+        $params = array(
+            'api_type' => 'json',
+            'op' => 'save',
+            'reason' => $reason,
+            'stylesheet_contents' => $contents
+        );
+
+        return $this->apiCall("/r/$subreddit/api/subreddit_stylesheet", 'POST', $params);
+    }
+
+    /**
+     * Search for subreddits by topic keywords.
+     * @param string $query Query with which to search.
+     * @return array List of objects containing subreddit names.
+     */
+    public function searchSubredditsByTopic($query) {
+        $params = array(
+            'query' => $query
+        );
+
+        return $this->apiCall("/api/subreddits_by_topic", 'GET', $params);
+    }
+
+    /**
+     * Subscribe to a subreddit. Must have read access to the subreddit.
+     * @param string $subreddit Subreddit to which to subscribe.
+     * @return object Response to API call, probably empty.
+     */
+    public function subscribe($subreddit) {
+        $subreddit_info = $this->aboutSubreddit($subreddit);
+
+        if (!isset($subreddit_info->data->name)) {
             return null;
         }
 
-        return $response->submit_text;
+        $params = array(
+            'action' => 'sub',
+            'sr' => $subreddit_info->data->name
+        );
+
+        return $this->apiCall("/api/subscribe", 'POST', $params);
+    }
+
+    /**
+     * Unsubscribe from a subreddit.
+     * @param string $subreddit Subreddit from which to unsubscribe.
+     * @return object Response to API call, probably empty. 404 error if not already subscribed.
+     */
+    public function unsubscribe($subreddit) {
+        $subreddit_info = $this->aboutSubreddit($subreddit);
+
+        if (!isset($subreddit_info->data->name)) {
+            return null;
+        }
+
+        $params = array(
+            'action' => 'unsub',
+            'sr' => $subreddit_info->data->name
+        );
+
+        return $this->apiCall("/api/subscribe", 'POST', $params);
+    }
+
+    /**
+     * Retrieve a list of the subreddit's settings. Must be a moderator.
+     * @param string $subreddit The subreddit to retrieve.
+     * @return object Contains information about a subreddit's settings.
+     */
+    public function getSubredditSettings($subreddit) {
+        return $this->apiCall("/r/$subreddit/about/edit.json");
+    }
+
+    /**
+     * Get a subreddit's sidebar contents.
+     * @param string $subreddit Subreddit of which to retrieve sidebar.
+     * @return object Wikipage object of subreddit's sidebar.
+     */
+    public function getSubredditSidebar($subreddit) {
+        return $this->apiCall("/r/$subreddit/wiki/config/sidebar.json");
+    }
+
+    /**
+     * Retrieve a subreddit's stickied posts.
+     * @param string $subreddit Subreddit from which to retrieve sticky posts.
+     * @return array Contains link objects that are stickied in the subreddit. None if no sticky. If two, top sticky is first.
+     */
+    public function getStickies($subreddit) {
+        $hot_page = $this->getHot($subreddit, 1);
+        $stickies = array();
+
+        if (is_array($hot_page->children)) {
+            foreach($hot_page->children as $post) {
+                if ($post->data->stickied) {
+                    $stickies[] = $post;
+                }
+            }
+        }
+
+        return $stickies;
+    }
+
+    /**
+     * Search for subreddits by title and description.
+     * @param string $query Query with which to search
+     * @param string $sort Sorting method. One of 'relevance', 'activity'
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of subreddits that match the search query.
+     */
+    public function searchSubreddits($query, $sort = 'relevance', $limit = 25, $after = null, $before = null) {
+        $params = array(
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'q' => $query,
+            'show' => 'all',
+            'sort' => $sort
+        );
+
+        return $this->apiCall("/subreddits/search", 'GET', $params);
+    }
+
+    /**
+     * Private method for retrieving /subreddits/mine/$location.
+     * @param string $location One of 'subscriber', 'contributor', 'moderator'
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of subreddits.
+     */
+    private function getMySubreddits($location, $limit, $after, $before) {
+        $params = array(
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'show' => 'all'
+        );
+
+        return $this->apiCall("/subreddits/mine/$location", 'GET', $params);
+    }
+
+    /**
+     * Retrieve a list of the current user's subscribed subreddits.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of subreddits.
+     */
+    public function getMySubscribedSubreddits($limit = 25, $after = null, $before = null) {
+        return $this->getMySubreddits('subscriber', $limit, $after, $before);
+    }
+
+    /**
+     * Retrieve a list of the current user's subreddits in which they are an approved submitter.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of subreddits.
+     */
+    public function getMyContributedSubreddits($limit = 25, $after = null, $before = null) {
+        return $this->getMySubreddits('contributor', $limit, $after, $before);
+    }
+
+    /**
+     * Retrieve a list of the current user's subreddits in which they are a moderator.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of subreddits.
+     */
+    public function getMyModeratedSubreddits($limit = 25, $after = null, $before = null) {
+        return $this->getMySubreddits('moderator', $limit, $after, $before);
+    }
+
+    /**
+     * Private function for retrieving a list of all subreddits by $location
+     * @param string $location One of 'popular', 'new', 'gold', 'default'.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of subreddits.
+     */
+    private function getSubreddits($location, $limit, $after, $before) {
+        $params = array(
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'show' => 'all'
+        );
+
+        return $this->apiCall("/subreddits/$location", 'GET', $params);
+    }
+
+    /**
+     * Retrieves a list of popular subreddits.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of subreddits.
+     */
+    public function getPopularSubreddits($limit = 25, $after = null, $before = null) {
+        return $this->getSubreddits('popular', $limit, $after, $before);
+    }
+
+    /**
+     * Retrieves a list of new subreddits.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of subreddits.
+     */
+    public function getNewSubreddits($limit = 25, $after = null, $before = null) {
+        return $this->getSubreddits('new', $limit, $after, $before);
+    }
+
+    /**
+     * Retrieves a list of gold-only subreddits.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of subreddits.
+     */
+    public function getGoldOnlySubreddits($limit = 25, $after = null, $before = null) {
+        return $this->getSubreddits('gold', $limit, $after, $before);
+    }
+
+    /**
+     * Retrieves a list of default subreddits.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of subreddits.
+     */
+    public function getDefaultSubreddits($limit = 25, $after = null, $before = null) {
+        return $this->getSubreddits('default', $limit, $after, $before);
+    }
+
+    /**
+     * Create a new subreddit.
+     * @param string $subreddit Name of subreddit to create.
+     * @param array $settings An array containing a key-value pair for each option you want to set (TITLE IS REQUIRED):
+     *          'allow_top' (boolean) Allow this subreddit to be included /r/all as well as the default and trending lists.
+     *          'collapse_deleted_comments' (boolean) Collapse deleted and removed comments.
+     *          'comment_score_hide_mins' (int) Minutes to hide comment scores.
+     *          'description' (string) Sidebar text.
+     *          'exclude_banned_modqueue' (boolean) Exclude posts by site-wide banned users from modqueue/unmoderated.
+     *          'header-title' (string) Header mouseover text.
+     *          'hide_ads' (boolean) Hide ads (only available for gold only subreddits).
+     *          'lang' (string) Language, a valid IETF language tag (underscore separated).
+     *          'link_type' (string) Content options. One of 'any', 'link', 'self'.
+     *          'over_18' (boolean) Viewers must be over eighteen years old.
+     *          'public_description' (string) Description, appears in search results and social media links.
+     *          'public_traffic' (boolean) Make the traffic stats page available to everyone.
+     *          'show_media' (boolean) Show thumbnail images of content.
+     *          'spam_comments' (string) Spam filter strength for comments. One of 'low', 'high', 'all'.
+     *          'spam_links' (string) Spam filter strength for links. One of 'low', 'high', 'all'.
+     *          'spam_selfposts' (string) Spam filter strength for self posts. One of 'low', 'high', 'all'.
+     *          'submit_link_label' (string) Custom label for submit link button (blank for default).
+     *          'submit_text' (string) Submission text, text to show on submission page.
+     *          'submit_text_label' (string) Custom label for submit text post button (blank for default).
+     *          'suggested_comment_sort' (string) Suggested comment sort. One of 'confidence', 'top', 'new', 'hot', 'controversial', 'old', 'random', 'qa'
+     *          'title' (string) Subreddit title, shown in the browser tab.
+     *          'type' (string) Subreddit type. One of 'restricted', 'private', 'public'. Other values are 'gold_restricted', 'archived', 'gold_only' and 'employees_only', but result in errors.
+     *          'wiki_edit_age' (int) Account age (days) required to edit and create wiki pages.
+     *          'wiki_edit_karma' (int) Subreddit karma required to edit and create wiki pages.
+     *          'wikimode' (string) Who should be able to edit the wiki. One of 'disabled', 'modonly', 'anyone'.
+     * @param bool $i_read_the_documentation Must be set to true to show that you've read this.
+     * @return object Response to API call. (Watch for RATELIMIT errors.)
+     */
+    public function createSubreddit($subreddit, $settings, $i_read_the_documentation = false) {
+        if ($i_read_the_documentation !== true) {
+            echo "Please read the PHPdoc documentation for Phapper::createSubreddit().\n";
+            return null;
+        }
+
+        if (empty($subreddit) || empty($settings['title'])) {
+            return null;
+        }
+
+        $params = array(
+            'allow_top' => true,
+            'collapse_deleted_comments' => false,
+            'comment_score_hide_mins' => 0,
+            'description' => "",
+            'exclude_banned_modqueue' => false,
+            'header-title' => "",
+            'hide_ads' => false,
+            'lang' => 'en',
+            'link_type' => 'any',
+            'over_18' => false,
+            'public_description' => "",
+            'public_traffic' => false,
+            'show_media' => false,
+            'spam_comments' => 'low',
+            'spam_links' => 'high',
+            'spam_selfposts' => 'high',
+            'submit_link_label' => "",
+            'submit_text' => "",
+            'submit_text_label' => "",
+            'suggested_comment_sort' => '',
+            'title' => "", //REQUIRED
+            'type' => 'public',
+            'wiki_edit_age' => 0,
+            'wiki_edit_karma' => 100,
+            'wikimode' => 'disabled'
+        );
+
+        foreach ($settings as $key=>$value) {
+            $params[$key] = $value;
+        }
+
+        $params['api_type'] = 'json';
+        $params['name'] = $subreddit;
+
+        foreach ($params as $key=>&$value) {
+            if (is_bool($value)) {
+                $value = ($value) ? 'true' : 'false';
+            }
+        }
+
+        return $this->apiCall("/api/site_admin", 'POST', $params);
+    }
+
+    /**
+     * TODO: fix suggested_comment_sort when admins fix retrieval bug
+     * Change a subreddit's configuration.
+     * @param string $subreddit Name of subreddit to change.
+     * @param array $settings An array containing a key-value pair for each option you want to change:
+     *          'allow_top' (boolean) Allow this subreddit to be included /r/all as well as the default and trending lists.
+     *          'collapse_deleted_comments' (boolean) Collapse deleted and removed comments.
+     *          'comment_score_hide_mins' (int) Minutes to hide comment scores.
+     *          'description' (string) Sidebar text.
+     *          'exclude_banned_modqueue' (boolean) Exclude posts by site-wide banned users from modqueue/unmoderated.
+     *          'header-title' (string) Header mouseover text.
+     *          'hide_ads' (boolean) Hide ads (only available for gold only subreddits).
+     *          'lang' (string) Language, a valid IETF language tag (underscore separated).
+     *          'link_type' (string) Content options. One of 'any', 'link', 'self'.
+     *          'over_18' (boolean) Viewers must be over eighteen years old.
+     *          'public_description' (string) Description, appears in search results and social media links.
+     *          'public_traffic' (boolean) Make the traffic stats page available to everyone.
+     *          'show_media' (boolean) Show thumbnail images of content.
+     *          'spam_comments' (string) Spam filter strength for comments. One of 'low', 'high', 'all'.
+     *          'spam_links' (string) Spam filter strength for links. One of 'low', 'high', 'all'.
+     *          'spam_selfposts' (string) Spam filter strength for self posts. One of 'low', 'high', 'all'.
+     *          'submit_link_label' (string) Custom label for submit link button (blank for default).
+     *          'submit_text' (string) Submission text, text to show on submission page.
+     *          'submit_text_label' (string) Custom label for submit text post button (blank for default).
+     *          'suggested_comment_sort' (string) Suggested comment sort. One of 'confidence', 'top', 'new', 'hot', 'controversial', 'old', 'random', 'qa'
+     *          'title' (string) Subreddit title, shown in the browser tab.
+     *          'type' (string) Subreddit type. One of 'restricted', 'private', 'public'. Other values are 'gold_restricted', 'archived', 'gold_only' and 'employees_only', but result in errors.
+     *          'wiki_edit_age' (int) Account age (days) required to edit and create wiki pages.
+     *          'wiki_edit_karma' (int) Subreddit karma required to edit and create wiki pages.
+     *          'wikimode' (string) Who should be able to edit the wiki. One of 'disabled', 'modonly', 'anyone'.
+     * @param bool $i_read_the_documentation Must be set to true to show that you've read this.
+     * @return object Response to API call. (RATELIMIT errors can be ignored if you have recently created a subreddit.)
+     */
+    public function editSubreddit($subreddit, $settings, $i_read_the_documentation = false) {
+        if ($i_read_the_documentation !== true) {
+            echo "Please read the PHPdoc documentation for Phapper::editSubreddit().\n";
+            return null;
+        }
+
+        $subreddit_info = $this->aboutSubreddit($subreddit);
+        $subreddit_settings = $this->getSubredditSettings($subreddit);
+        if (!isset($subreddit_info->data) || !isset($subreddit_settings->data)) {
+            return null;
+        }
+
+        $params = get_object_vars($subreddit_settings->data);
+        $params['type'] = $subreddit_info->data->subreddit_type;
+        $params['link_type'] = $subreddit_info->data->submission_type;
+        $params['lang'] = $subreddit_info->data->lang;
+        $params['header-title'] = $subreddit_info->data->header_title;
+        $params['allow_top'] = $subreddit_settings->data->default_set;
+
+        foreach ($settings as $key=>$value) {
+            $params[$key] = $value;
+        }
+
+        $params['api_type'] = 'json';
+        $params['sr'] = $subreddit_info->data->name;
+
+        foreach ($params as $key=>&$value) {
+            if (is_bool($value)) {
+                $value = ($value) ? 'true' : 'false';
+            }
+        }
+
+        var_dump($subreddit_info);
+        var_dump($subreddit_settings);
+
+        return $this->apiCall("/api/site_admin", 'POST', $params);
     }
 
     //-----------------------------------------
-    // Users
+    // Users (DONE)
     //-----------------------------------------
+    /**
+     * Adds the specified user as a friend.
+     * @param string $user Username of friend to add.
+     * @param string|null $note Note to add to friend record. Currently only available to those with reddit gold.
+     * @return object A friend record object.
+     */
+    public function addFriend($user, $note = null) {
+        $params = array(
+            'name' => $user
+        );
+
+        if (!empty($note)) {
+            $params['note'] = $note;
+        }
+
+        return $this->apiCall("/api/v1/me/friends/$user", 'PUT', json_encode($params), true);
+    }
+
+    /**
+     * Removes the specified user as a friend.
+     * @param string $user Username of user to remove.
+     * @return null Response to API call, null for some reason.
+     */
+    public function removeFriend($user) {
+        $params = array(
+            'id' => $user
+        );
+
+        return $this->apiCall("/api/v1/me/friends/$user", 'DELETE', $params);
+    }
+
+    /**
+     * Unblock a user by username.
+     * @param string $user Username of user to unblock.
+     * @return object Response to API call.
+     */
     public function unblockUser($user) {
-        while (!isset($this->user_id)) {
+        if (!isset($this->user_id)) {
             $this->getMe();
         }
 
@@ -1991,14 +2648,480 @@ class Phapper {
         return $this->apiCall("/api/unfriend", 'POST', $params);
     }
 
+    /**
+     * Presumably checks whether the specified username is available, but endpoint is not working at this time.
+     * @param string $username Username to check for availability.
+     * @return object Response to API call.
+     */
+    public function usernameAvailable($username) {
+        $params = array(
+            'user' => $username
+        );
+
+        return $this->apiCall("/api/username_available.json", 'GET', $params);
+    }
+
+    /**
+     * Check notifications? Not documented by reddit.
+     * @param string|null $start_date Start date of notification records.
+     * @param string|null $end_date End date of notification records.
+     * @param string|null $sort One of 'new', 'old', or null.
+     * @return array List of notification objects from reddit.
+     */
+    public function getNotifications($start_date = null, $end_date = null, $sort = null) {
+        $params = array(
+            'start_date' => $start_date,
+            'end_date' => $end_date,
+            'sort' => $sort
+        );
+
+        return $this->apiCall("/api/v1/me/notifications", 'GET', $params);
+    }
+
+    /**
+     * Mark a notification as read based on its thing ID.
+     * @param string $thing_id Thing ID of the notification to mark as read.
+     * @param bool $read Whether or not to mark as read. False doesn't seem to be working.
+     * @return mixed Response to API call, probably null, but could change in the future.
+     */
+    public function markNotificationAsRead($thing_id, $read = true) {
+        $params = array(
+            'read' => $read
+        );
+
+        return $this->apiCall("/api/v1/me/notifications/$thing_id", 'PATCH', json_encode($params), true);
+    }
+
+    /**
+     * Get a user's trophies.
+     * @param string $user Username of user for whom to retrieve trophies.
+     * @return object Listing of trophies.
+     */
+    public function getUserTrophies($user) {
+        $params = array(
+            'id' => $user
+        );
+
+        return $this->apiCall("/api/v1/user/$user/trophies", 'GET', $params);
+    }
+
+    /**
+     * Retrieve information about the specified user.
+     * @param string $user Username of user to retrieve.
+     * @return object Response to API call containing user object.
+     */
+    public function getUser($user) {
+        return $this->apiCall("/user/$user/about.json");
+    }
+
+    /**
+     * Private method for obtaining a specific user's post and comment listings.
+     * @param string $location One of 'overview', 'submitted', 'comments', 'upvoted', 'downvoted', 'hidden', 'saved', 'gilded'.
+     * @param string $user Username of user for whom to retrieve records. Defaults to the current user.
+     * @param string|null $sort Sorting method. One of 'hot', 'new', 'top', 'controversial', or null.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @param string|null $time One of 'hour', 'day', 'week', 'month', 'year', 'all', or null.
+     * @param string|null $show When getting gildings, use 'given' to show gildings issued by the user. Defaults to gildings received.
+     * @return object Listing of posts and/or comments made by the specified user.
+     */
+    private function getUserListing($location, $user, $sort, $limit, $after, $before, $time = null, $show = null) {
+        if (empty($user)) {
+            $user = REDDIT_USERNAME;
+        }
+
+        $params = array(
+            'show' => $show,
+            'sort' => $sort,
+            't' => $time,
+            'username' => $user,
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+        );
+
+        return $this->apiCall("/user/$user/$location.json", 'GET', $params);
+    }
+
+    /**
+     * Obtain posts and comments made by the specified user.
+     * @param string $user Username of user for whom to retrieve records. Defaults to the current user.
+     * @param string|null $sort Sorting method. One of 'hot', 'new', 'top', 'controversial', or null.
+     * @param string|null $time One of 'hour', 'day', 'week', 'month', 'year', 'all', or null.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of posts and comments made by the specified user.
+     */
+    public function getUserOverview($user = null, $sort = null, $time = null, $limit = 25, $after = null, $before = null) {
+        return $this->getUserListing('overview', $user, $sort, $limit, $after, $before, $time);
+    }
+
+    /**
+     * Obtain only posts made by the specified user.
+     * @param string $user Username of user for whom to retrieve records. Defaults to the current user.
+     * @param string|null $sort Sorting method. One of 'hot', 'new', 'top', 'controversial', or null.
+     * @param string|null $time One of 'hour', 'day', 'week', 'month', 'year', 'all', or null.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of posts comments made by the specified user.
+     */
+    public function getUserSubmitted($user = null, $sort = null, $time = null, $limit = 25, $after = null, $before = null) {
+        return $this->getUserListing('submitted', $user, $sort, $limit, $after, $before, $time);
+    }
+
+    /**
+     * Obtain only comments made by the specified user.
+     * @param string $user Username of user for whom to retrieve records. Defaults to the current user.
+     * @param string|null $sort Sorting method. One of 'hot', 'new', 'top', 'controversial', or null.
+     * @param string|null $time One of 'hour', 'day', 'week', 'month', 'year', 'all', or null.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of comments made by the specified user.
+     */
+    public function getUserComments($user = null, $sort = null, $time = null, $limit = 25, $after = null, $before = null) {
+        return $this->getUserListing('comments', $user, $sort, $limit, $after, $before, $time);
+    }
+
+    /**
+     * Obtain posts and comments upvoted by the specified user.
+     * @param string $user Username of user for whom to retrieve records. Defaults to the current user.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of posts and comments upvoted by the specified user.
+     */
+    public function getUserUpvoted($user = null, $limit = 25, $after = null, $before = null) {
+        return $this->getUserListing('upvoted', $user, null, $limit, $after, $before);
+    }
+
+    /**
+     * Obtain posts and comments downvoted by the specified user.
+     * @param string $user Username of user for whom to retrieve records. Defaults to the current user.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of posts and comments downvoted by the specified user.
+     */
+    public function getUserDownvoted($user = null, $limit = 25, $after = null, $before = null) {
+        return $this->getUserListing('downvoted', $user, null, $limit, $after, $before);
+    }
+
+    /**
+     * Obtain posts and comments hidden by the specified user.
+     * @param string $user Username of user for whom to retrieve records. Defaults to the current user.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of posts and comments hidden by the specified user.
+     */
+    public function getUserHidden($user = null, $limit = 25, $after = null, $before = null) {
+        return $this->getUserListing('hidden', $user, null, $limit, $after, $before);
+    }
+
+    /**
+     * Obtain posts and comments saved by the specified user.
+     * @param string $user Username of user for whom to retrieve records. Defaults to the current user.
+     * @param string|null $sort Sorting method. One of 'hot', 'new', 'top', 'controversial', or null.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of posts and comments saved by the specified user.
+     */
+    public function getUserSaved($user = null, $sort = null, $limit = 25, $after = null, $before = null) {
+        return $this->getUserListing('saved', $user, $sort, $limit, $after, $before);
+    }
+
+    /**
+     * Obtain posts and comments gilded (received) by the specified user.
+     * @param string $user Username of user for whom to retrieve records. Defaults to the current user.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of posts and/or comments made by the specified user.
+     */
+    public function getUserGildingsReceived($user = null, $limit = 25, $after = null, $before = null) {
+        return $this->getUserListing('gilded', $user, null, $limit, $after, $before);
+    }
+
+    /**
+     * Obtain posts and comments gilded (given) by the specified user.
+     * @param string $user Username of user for whom to retrieve records. Defaults to the current user.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of posts and/or comments made by the specified user.
+     */
+    public function getUserGildingsGiven($user = null, $limit = 25, $after = null, $before = null) {
+        return $this->getUserListing('gilded', $user, null, $limit, $after, $before, null, 'given');
+    }
+
     //-----------------------------------------
     // Wiki
     //-----------------------------------------
+    /**
+     * Allow the specified user to edit the specified wiki page.
+     * @param string $subreddit Subreddit of the wiki page.
+     * @param string $username Username of user to allow.
+     * @param string $pagename Name of page to allow user to edit.
+     * @return object Response to API call. Probably empty, but could contain errors, such as PAGE_NOT_FOUND.
+     */
+    public function wikiAllowEditor($subreddit, $username, $pagename) {
+        $params = array(
+            'act' => 'add',
+            'page' => $pagename,
+            'username' => $username
+        );
+
+        return $this->apiCall("/r/$subreddit/api/wiki/alloweditor/add", 'POST', $params);
+    }
+
+    /**
+     * Remove the specified user from the allowed editors list of the specified wiki page.
+     * @param string $subreddit Subreddit of the wiki page.
+     * @param string $username Username of user to allow.
+     * @param string $pagename Name of page to disallow user to edit.
+     * @return object Response to API call. Probably empty, but could contain errors, such as PAGE_NOT_FOUND.
+     */
+    public function wikiDisallowEditor($subreddit, $username, $pagename) {
+        $params = array(
+            'page' => $pagename,
+            'username' => $username
+        );
+
+        return $this->apiCall("/r/$subreddit/api/wiki/alloweditor/del", 'POST', $params);
+    }
+
+    /**
+     * Retrieves a list of all pages of the specified subreddit's wiki.
+     * @param string $subreddit Subreddit for which to retrieve pages.
+     * @return object Listing of wiki pages.
+     */
+    public function wikiGetPages($subreddit) {
+        return $this->apiCall("/r/$subreddit/wiki/pages");
+    }
+
+    /**
+     * Retrieves the specified wiki page, optionally at a specific revision or a comparison between revisions.
+     * @param string $subreddit Subreddit in which to retrieve page.
+     * @param string $pagename Page to retrieve.
+     * @param string|null $revision_id Specific revision ID to retrieve (optional).
+     * @param string|null $compare_with ID of revision with which to compare $revision_id (optional2). May not be working.
+     * @return mixed
+     */
+    public function wikiGetPage($subreddit, $pagename, $revision_id = null, $compare_with = null) {
+        $params = array(
+            'v' => $revision_id,
+            'v2' => $compare_with
+        );
+
+        return $this->apiCall("/r/$subreddit/wiki/$pagename", 'GET', $params);
+    }
+
+    /**
+     * Retrieves a listing of wiki revisions for all pages within the specified subreddit.
+     * @param string $subreddit Subreddit for which to retrieve revisions.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of wiki page revisions.
+     */
+    public function wikiGetRevisions($subreddit, $limit = 25, $after = null, $before = null) {
+        $params = array(
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'show' => 'all'
+        );
+
+        return $this->apiCall("/r/$subreddit/wiki/revisions", 'GET', $params);
+    }
+
+    /**
+     * Retrieves a listing of wiki revisions for the specified page within the specified subreddit.
+     * @param string $subreddit Subreddit for which to retrieve revisions.
+     * @param string $pagename Page for which to retrieve revisions.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of wiki page revisions.
+     */
+    public function wikiGetPageRevisions($subreddit, $pagename, $limit = 25, $after = null, $before = null) {
+        $params = array(
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'show' => 'all'
+        );
+
+        return $this->apiCall("/r/$subreddit/wiki/revisions/$pagename", 'GET', $params);
+    }
+
+    /**
+     * Edit or create a wiki page.
+     * @param string $subreddit Subreddit in which to edit page.
+     * @param string $pagename Page to edit.
+     * @param string $content Content with which to overwrite page.
+     * @param string|null $reason Reason for revision, optional.
+     * @param string|null $previous Revision ID on which to base this edit. Handled by function, so optional.
+     * @return object
+     */
+    public function wikiEditPage($subreddit, $pagename, $content, $reason = null, $previous = null) {
+        if (empty($previous)) {
+            $current_revision = $this->wikiGetPageRevisions($subreddit, $pagename, 1);
+            if (isset($current_revision->data->children[0])) {
+                $previous = $current_revision->data->children[0]->id;
+            }
+        }
+
+        $params = array(
+            'content' => $content,
+            'page' => $pagename,
+            'previous' => $previous,
+            'reason' => $reason
+        );
+
+        return $this->apiCall("/r/$subreddit/api/wiki/edit", 'POST', $params);
+    }
+
+    /**
+     * Toggle a revision's status of hidden.
+     * @param string $subreddit Subreddit of revision.
+     * @param string $pagename Pagename of revision.
+     * @param string $revision_id ID of revision to toggle hidden status.
+     * @return object Response to API call. Status attribute is true if the revision is now hidden, false if shown.
+     */
+    public function wikiToggleHideRevision($subreddit, $pagename, $revision_id) {
+        $params = array(
+            'page' => $pagename,
+            'revision' => $revision_id
+        );
+
+        return $this->apiCall("/r/$subreddit/api/wiki/hide", 'POST', $params);
+    }
+
+    /**
+     * Hide a revision from revision listing.
+     * This may take two calls, since the only way to get a revision's hidden status is to toggle it.
+     * @param string $subreddit Subreddit of revision.
+     * @param string $pagename Pagename of revision.
+     * @param string $revision_id ID of revision to hide.
+     * @return object Response to API call. Status attribute is true if the revision is now hidden, false if shown.
+     */
+    public function wikiHideRevision($subreddit, $pagename, $revision_id) {
+        $first_toggle = $this->wikiToggleHideRevision($subreddit, $pagename, $revision_id);
+
+        if ($first_toggle->status === false) {
+            return $this->wikiToggleHideRevision($subreddit, $pagename, $revision_id);
+        }
+
+        return $first_toggle;
+    }
+
+    /**
+     * Unhide a revision in the revision listing.
+     * This may take two calls, since the only way to get a revision's hidden status is to toggle it.
+     * @param string $subreddit Subreddit of revision.
+     * @param string $pagename Pagename of revision.
+     * @param string $revision_id ID of revision to unhide.
+     * @return object Response to API call. Status attribute is true if the revision is now hidden, false if shown.
+     */
+    public function wikiUnhideRevision($subreddit, $pagename, $revision_id) {
+        $first_toggle = $this->wikiToggleHideRevision($subreddit, $pagename, $revision_id);
+
+        if ($first_toggle->status === true) {
+            return $this->wikiToggleHideRevision($subreddit, $pagename, $revision_id);
+        }
+
+        return $first_toggle;
+    }
+
+    /**
+     * Revert a wiki page to a previous revision.
+     * @param string $subreddit Subreddit of revision.
+     * @param string $pagename Pagename of revision.
+     * @param string $revision_id ID of revision to which to revert.
+     * @return object Response to API call, probably empty.
+     */
+    public function wikiRevertToRevision($subreddit, $pagename, $revision_id) {
+        $params = array(
+            'page' => $pagename,
+            'revision' => $revision_id
+        );
+
+        return $this->apiCall("/r/$subreddit/api/wiki/revert", 'POST', $params);
+    }
+
+    /**
+     * Retrieves a listing of discussions about a certain wiki page.
+     * @param string $subreddit Subreddit of page.
+     * @param string $pagename Page for which to retrieve discussions.
+     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
+     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
+     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
+     * @return object Listing of posts.
+     */
+    public function wikiGetPageDiscussions($subreddit, $pagename, $limit = 25, $after = null, $before = null) {
+        $params = array(
+            'after' => $after,
+            'before' => $before,
+            'limit' => $limit,
+            'show' => 'all'
+        );
+
+        return $this->apiCall("/r/$subreddit/wiki/discussions/$pagename", 'GET', $params);
+    }
+
+    /**
+     * Get the specified page's settings in the specified subreddit.
+     * @param string $subreddit Subreddit of page.
+     * @param string $pagename Name of page.
+     * @return object Settings object for wiki page.
+     */
+    public function wikiGetPageSettings($subreddit, $pagename) {
+        return $this->apiCall("/r/$subreddit/wiki/settings/$pagename");
+    }
+
+    /**
+     * Update the specified page's settings in the specified subreddit.
+     * @param string $subreddit Subreddit of page.
+     * @param string $pagename Name of page.
+     * @param int|null $permlevel Permissions level for page. 0 for use subreddit wiki permissions, 1 for only approved editors, 2 for only mods, null to not update.
+     * @param bool|null $listed Show this page on the list of wiki pages. True to show, false to hide, null to not update.
+     * @return object Settings object for wiki page.
+     */
+    public function wikiUpdatePageSettings($subreddit, $pagename, $permlevel = null, $listed = null) {
+        if (is_null($permlevel) || is_null($listed)) {
+            $current_settings = $this->wikiGetPageSettings($subreddit, $pagename);
+            if (isset($current_settings->data)) {
+                $current_settings = get_object_vars($current_settings->data);
+                if (is_null($permlevel)) {
+                    $permlevel = $current_settings['permlevel'];
+                }
+                if (is_null($listed)) {
+                    $listed = $current_settings['listed'];
+                }
+            }
+            else {
+                return $current_settings;
+            }
+        }
+
+        $params = array(
+            'listed' => ($listed) ? 'true' : 'false',
+            'permlevel' => strval($permlevel)
+        );
+
+        return $this->apiCall("/r/$subreddit/wiki/settings/$pagename", 'POST', $params);
+    }
 
     //-----------------------------------------
     // API
     //-----------------------------------------
-    public function apiCall($path, $method = 'GET', $params = null) {
+    public function apiCall($path, $method = 'GET', $params = null, $json = false) {
         //Prepare request URL
         $url = $this->endpoint.$path;
 
@@ -2015,10 +3138,17 @@ class Phapper {
             "Authorization: ".$token['token_type']." ".$token['access_token']
         );
 
+        if ($json) {
+            $options[CURLOPT_HTTPHEADER][] = "Content-Type: application/json";
+        }
+
         //Prepare URL or POST parameters
         if (isset($params)) {
             if ($method == 'GET') {
                 $url .= '?'.http_build_query($params);
+            }
+            elseif ($method == 'PUT') {
+                $options[CURLOPT_POSTFIELDS] = $params;
             }
             else {
                 $options[CURLOPT_POSTFIELDS] = $params;
