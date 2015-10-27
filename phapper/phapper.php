@@ -1898,9 +1898,233 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Multis
-    // TODO
+    // Multis (DONE)
     //-----------------------------------------
+    /**
+     * Copy an existing multireddit to your own set.
+     * @param string $from_user Owner of multireddit to copy.
+     * @param string $from_name Name of multireddit to copy.
+     * @param string $to_name Name of destination multireddit.
+     * @return object Resulting multireddit object.
+     */
+    public function multiCopy($from_user, $from_name, $to_name) {
+        $params = array(
+            'display_name' => $to_name,
+            'from' => "/user/$from_user/m/$from_name",
+            'to'=> "/user/{$this->oauth2->username}/m/$to_name"
+        );
+
+        return $this->apiCall("/api/multi/copy", 'POST', $params);
+    }
+
+    /**
+     * Retrieves a list of multireddits that are owned by the current user.
+     * @return array Contains multireddit objects.
+     */
+    public function multiGetMine() {
+        return $this->apiCall("/api/multi/mine");
+    }
+
+    /**
+     * Retrieves a list of multireddits owned by the specified user.
+     * @param string $user Username of user for which to retrieve owned multireddits.
+     * @param bool $expand_srs Obtain extra details about the subreddits of each multireddit.
+     * @return array Multireddit objects.
+     */
+    public function multiGetUser($user, $expand_srs = false) {
+        $params = array(
+            'expand_srs' => ($expand_srs) ? 'true' : 'false'
+        );
+
+        return $this->apiCall("/api/multi/user/$user", 'GET', $params);
+    }
+
+    /**
+     * Renames a subreddit. Functions like copying the existing subreddit then deleting the old one.
+     * @param string $from_name Name of multireddit to rename.
+     * @param string $to_name Destination name.
+     * @return object Resulting multireddit object.
+     */
+    public function multiRename($from_name, $to_name) {
+        $params = array(
+            'display_name' => $to_name,
+            'from' => "/user/{$this->oauth2->username}/m/$from_name",
+            'to' => "/user/{$this->oauth2->username}/m/$to_name",
+        );
+
+        return $this->apiCall("/api/multi/rename", 'POST', $params);
+    }
+
+    /**
+     * Retrieves a multireddit.
+     * @param string $user Owner of multireddit to retrieve.
+     * @param string $name Name of multireddit to retrieve.
+     * @return object Multireddit object.
+     */
+    public function multiGet($user, $name) {
+        return $this->apiCall("/api/multi/user/$user/m/$name");
+    }
+
+    /**
+     * Create a multireddit. If multireddit of name already exists, an incremented number is appended to the end.
+     * @param string $name Name (and URL) of new multireddit.
+     * @param string|array $subreddits Array or comma-delimited string of one or more subreddits that should go in the multireddit.
+     * @param string|null $description Multireddit sidebar text.
+     * @param string $visibility One of 'public', 'private', 'hidden'. Hidden multireddits will not be visible to you except through the API.
+     * @param string $weighting_scheme One of 'classic', 'fresh'.
+     * @param string|null $icon Not really used, but see https://www.reddit.com/dev/api#POST_api_multi_{multipath} for possible values.
+     * @param string $key_color Not really used, but can be hex color.
+     * @return object Multireddit object of new multireddit.
+     */
+    public function multiCreate($name, $subreddits = array(), $description = null, $visibility = 'private', $weighting_scheme = 'classic', $icon = null, $key_color = '#cee3f8') {
+        if (!is_array($subreddits)) {
+            $subreddits = explode(',', $subreddits);
+        }
+
+        $named_subreddits = array();
+        foreach ($subreddits as $subreddit) {
+            $named_subreddits[]['name'] = $subreddit;
+        }
+
+        $params = array(
+            'model' => array(
+                'description_md' => $description,
+                'display_name' => $name,
+                'icon_name' => $icon,
+                'key_color' => $key_color,
+                'subreddits' => $named_subreddits,
+                'visibility' => $visibility,
+                'weighting_scheme' => $weighting_scheme
+            )
+        );
+
+        $params['model'] = json_encode($params['model']);
+
+        return $this->apiCall("/api/multi/user/{$this->oauth2->username}/m/$name", 'PUT', $params);
+    }
+
+    /**
+     * Update an existing multireddit. If one of the specified name does not exits, one will be created.
+     * Fields to not be updated should be null.
+     * @param string $name Name (and URL) of new multireddit.
+     * @param string|null $subreddits Array or comma-delimited string of one or more subreddits that should go in the multireddit.
+     * @param string|null $description Multireddit sidebar text.
+     * @param string $visibility One of 'public', 'private', 'hidden'. Hidden multireddits will not be visible to you except through the API.
+     * @param string|null $weighting_scheme One of 'classic', 'fresh'.
+     * @param string|null $icon Not really used, but see https://www.reddit.com/dev/api#POST_api_multi_{multipath} for possible values.
+     * @param string|null $key_color Not really used, but can be hex color.
+     * @return object Multireddit object of resulting multireddit.
+     */
+    public function multiEdit($name, $subreddits = null, $description = null, $visibility = null, $weighting_scheme = null, $icon = null, $key_color = null) {
+        $model['display_name'] = $name;
+
+        if (!is_null($subreddits)) {
+            if (!is_array($subreddits)) {
+                $subreddits = implode(',', $subreddits);
+            }
+
+            $named_subreddits = array();
+            foreach($subreddits as $subreddit) {
+                $named_subreddits[]['name'] = $subreddit;
+            }
+
+            $model['subreddits'] = $named_subreddits;
+        }
+
+        if (!is_null($description)) {
+            $model['description_md'] = $description;
+        }
+
+        if (!is_null($visibility)) {
+            $model['visibility'] = $visibility;
+        }
+
+        if (!is_null($weighting_scheme)) {
+            $model['weighting_scheme'] = $weighting_scheme;
+        }
+
+        if (!is_null($icon)) {
+            $model['icon_name'] = $icon;
+        }
+
+        if (!is_null($key_color)) {
+            $model['key_color'] = $key_color;
+        }
+
+        var_dump($model);
+
+        $params['model'] = json_encode($model);
+
+        return $this->apiCall("/api/multi/user/{$this->oauth2->username}/m/$name", 'PUT', $params);
+    }
+
+    /**
+     * Deletes the specified multireddit.
+     * @param string $name Name of multireddit to delete.
+     * @return null Response to API call, probably null.
+     */
+    public function multiDelete($name) {
+        return $this->apiCall("/api/multi/user/{$this->oauth2->username}/m/$name", 'DELETE');
+    }
+
+    /**
+     * Get the description/sidebar for the specified multireddit.
+     * @param string $user Owner of multireddit.
+     * @param string $name Name of multireddit.
+     * @return object Response to API call, a LabeledMultiDescription object.
+     */
+    public function multiGetDescription($user, $name) {
+        return $this->apiCall("/api/multi/user/$user/m/$name/description");
+    }
+
+    /**
+     * Edit the description/sidebar for the specified multireddit.
+     * @param string $name Name of multireddit.
+     * @param string $description New description.
+     * @return object Response to API call, LabeledMultiDescription object.
+     */
+    public function multiEditDescription($name, $description) {
+        $params['model'] = json_encode(array(
+            'body_md' => $description
+        ));
+
+        return $this->apiCall("/api/multi/user/{$this->oauth2->username}/m/$name/description", 'PUT', $params);
+    }
+
+    /**
+     * Get information about the specified subreddit in the specified multireddit. Kinda useless, since it only returns the name at this point.
+     * @param string $user Owner of multireddit.
+     * @param string $name Name of multireddit.
+     * @param string $subreddit Subreddit for which to obtain information.
+     * @return object Response to API call, only contains subreddit name.
+     */
+    public function multiGetSubreddit($user, $name, $subreddit) {
+        return $this->apiCall("/api/multi/user/$user/m/$name/r/$subreddit");
+    }
+
+    /**
+     * Add the specified subreddit to the specified multireddit.
+     * @param string $name Name of multireddit.
+     * @param string $subreddit Name of subreddit to add.
+     * @return object Response to API call, only contains the subreddit name.
+     */
+    public function multiAddSubreddit($name, $subreddit) {
+        $params['model'] = json_encode(array(
+            'name' => $subreddit
+        ));
+
+        return $this->apiCall("/api/multi/user/{$this->oauth2->username}/m/$name/r/$subreddit", 'PUT', $params);
+    }
+
+    /**
+     * Remove the specified subreddit from the specified multireddit.
+     * @param string $name Name of multireddit.
+     * @param string $subreddit Name of subreddit to remove.
+     * @return object Response to API call, probably null.
+     */
+    public function multiRemoveSubreddit($name, $subreddit) {
+        return $this->apiCall("/api/multi/user/{$this->oauth2->username}/m/$name/r/$subreddit", 'DELETE');
+    }
 
     //-----------------------------------------
     // Search (DONE)
@@ -2728,7 +2952,7 @@ class Phapper {
      */
     private function getUserListing($location, $user, $sort, $limit, $after, $before, $time = null, $show = null) {
         if (empty($user)) {
-            $user = REDDIT_USERNAME;
+            $user = $this->oauth2->username;
         }
 
         $params = array(
@@ -3146,9 +3370,6 @@ class Phapper {
         if (isset($params)) {
             if ($method == 'GET') {
                 $url .= '?'.http_build_query($params);
-            }
-            elseif ($method == 'PUT') {
-                $options[CURLOPT_POSTFIELDS] = $params;
             }
             else {
                 $options[CURLOPT_POSTFIELDS] = $params;
