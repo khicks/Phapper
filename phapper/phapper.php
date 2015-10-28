@@ -938,16 +938,15 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Live threads
-    // TODO
+    // Live threads (DONE)
     //-----------------------------------------
     /**
-     * Creates a new Live thread. To use an existing one, use attachLiveThread().
+     * Creates a new live thread. To use an existing one, use attachLiveThread().
      * @param string $title The thread's title.
-     * @param null $description The thread's description.
-     * @param null $resources The thread's list of resources.
-     * @param bool|false $nsfw Whether or not the thread is NSFW.
-     * @return null|Live Returns a Live thread object on success. Null if failed.
+     * @param string|null $description The thread's description.
+     * @param string|null $resources The thread's resources section in the sidebar.
+     * @param bool $nsfw Whether or not the thread is NSFW. Prompts guests to continue when visiting.
+     * @return Live|null New PHP object representing a reddit live thread.
      */
     public function createLiveThread($title, $description = null, $resources = null, $nsfw = false) {
         $params = array(
@@ -967,9 +966,9 @@ class Phapper {
     }
 
     /**
-     * Uses an existing Live thread to create a Live object.
+     * Uses an existing live thread to create a Live object. You do not necessarily need to be a contributor to attach.
      * @param string $thread_id Thread ID of the thread to attach.
-     * @return Live Returns the resulting Live object.
+     * @return Live Returns the resulting PHP Live object.
      */
     public function attachLiveThread($thread_id) {
         return new Live($this, $thread_id);
@@ -1895,6 +1894,32 @@ class Phapper {
         );
 
         return $this->apiCall("/api/unmute_message_author", 'POST', $params);
+    }
+
+    /**
+     * Lock a post and prevent any new comments by non-moderators.
+     * @param string $thing_id Thing ID of post to lock. Must be a post, not a comment.
+     * @return object Response to API call, probably empty.
+     */
+    public function lockThread($thing_id) {
+        $params = array(
+            'id' => $thing_id
+        );
+
+        return $this->apiCall("/api/lock", 'POST', $params);
+    }
+
+    /**
+     * Unlock a post and allow any new comments.
+     * @param string $thing_id Thing ID of post to unlock.
+     * @return object Response to API call, probably empty.
+     */
+    public function unlockThread($thing_id) {
+        $params = array(
+            'id' => $thing_id
+        );
+
+        return $this->apiCall("/api/unlock", 'POST', $params);
     }
 
     //-----------------------------------------
