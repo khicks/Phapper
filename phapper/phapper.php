@@ -3383,9 +3383,7 @@ class Phapper {
         $options[CURLOPT_TIMEOUT] = 10;
         $options[CURLOPT_USERAGENT] = $this->user_agent;
         $options[CURLOPT_CUSTOMREQUEST] = $method;
-        $options[CURLOPT_HTTPHEADER] = array(
-            "Authorization: ".$token['token_type']." ".$token['access_token']
-        );
+        $options[CURLOPT_HTTPHEADER][] = "Authorization: ".$token['token_type']." ".$token['access_token'];
 
         if ($json) {
             $options[CURLOPT_HTTPHEADER][] = "Content-Type: application/json";
