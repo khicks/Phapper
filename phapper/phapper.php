@@ -3389,38 +3389,61 @@ class Phapper {
             $options[CURLOPT_HTTPHEADER][] = "Content-Type: application/json";
         }
 
-        //Prepare URL or POST parameters
-        if (isset($params)) {
-            if ($method == 'GET') {
-                $url .= '?'.http_build_query($params);
+        //Execution is placed in a loop in case CAPTCHA is required.
+        do{
+            //Prepare URL or POST parameters
+            if (isset($params)) {
+                if ($method == 'GET') {
+                    $url .= '?'.http_build_query($params);
+                }
+                else {
+                    $options[CURLOPT_POSTFIELDS] = $params;
+                }
+            }
+
+            //Build cURL object
+            $ch = curl_init($url);
+            curl_setopt_array($ch, $options);
+
+            //Wait on rate limiter if necessary
+            $this->ratelimiter->wait();
+
+            //Print request URL for debug
+            if ($this->debug) {
+                echo $url."\n";
+            }
+
+            //Send request and close connection
+            $response_raw = curl_exec($ch);
+            curl_close($ch);
+
+            //Parse response
+            $response = json_decode($response_raw);
+            if ($json_error = json_last_error()) {
+                $response = $response_raw;
+            }
+
+            if (isset($response->json->captcha)) {
+                $params['iden'] = $response->json->captcha;
+                $params['captcha'] = $this->getCaptchaResponse($response->json->captcha);
+                $needs_captcha = ($params['captcha'] === 'skip') ? false : true;
             }
             else {
-                $options[CURLOPT_POSTFIELDS] = $params;
+                $needs_captcha = false;
             }
-        }
+        } while ($needs_captcha);
 
-        //Build cURL object
-        $ch = curl_init($url);
-        curl_setopt_array($ch, $options);
-
-        //Wait on rate limiter if necessary
-        $this->ratelimiter->wait();
-
-        //Print request URL for debug
-        if ($this->debug) {
-            echo $url."\n";
-        }
-
-        //Send request and close connection
-        $response_raw = curl_exec($ch);
-        curl_close($ch);
-
-        //Parse response
-        $response = json_decode($response_raw);
-        if ($json_error = json_last_error()) {
-            $response = $response_raw;
-        }
 
         return $response;
+    }
+
+    private function getCaptchaResponse($iden) {
+        fwrite(STDERR, "\n==============================================================================\n");
+        fwrite(STDERR, "CAPTCHA REQUIRED!\nPlease visit this link and type in the letters you see in the picture.\n\n");
+        fwrite(STDERR, PHAPPER_BASIC_ENDPOINT."/captcha/$iden\n");
+        fwrite(STDERR, "\n(Too hard? Leave blank to request another. To skip this command, type 'skip'.)");
+        fwrite(STDERR, "\n==============================================================================\n");
+        $answer = readline("Response: ");
+        return $answer;
     }
 }
