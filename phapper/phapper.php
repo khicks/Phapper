@@ -2774,7 +2774,6 @@ class Phapper {
     }
 
     /**
-     * TODO: fix suggested_comment_sort when admins fix retrieval bug
      * Change a subreddit's configuration.
      * @param string $subreddit Name of subreddit to change.
      * @param array $settings An array containing a key-value pair for each option you want to change:
@@ -2797,7 +2796,7 @@ class Phapper {
      *          'submit_link_label' (string) Custom label for submit link button (blank for default).
      *          'submit_text' (string) Submission text, text to show on submission page.
      *          'submit_text_label' (string) Custom label for submit text post button (blank for default).
-     *          'suggested_comment_sort' (string) Suggested comment sort. One of 'confidence', 'top', 'new', 'hot', 'controversial', 'old', 'random', 'qa'
+     *          'suggested_comment_sort' (string) Suggested comment sort. One of 'confidence', 'top', 'new', 'hot', 'controversial', 'old', 'random', 'qa'.
      *          'title' (string) Subreddit title, shown in the browser tab.
      *          'type' (string) Subreddit type. One of 'restricted', 'private', 'public'. Other values are 'gold_restricted', 'archived', 'gold_only' and 'employees_only', but result in errors.
      *          'wiki_edit_age' (int) Account age (days) required to edit and create wiki pages.
