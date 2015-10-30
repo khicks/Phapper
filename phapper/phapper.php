@@ -17,20 +17,25 @@ class Phapper {
 
     private $user_id;
     private $user_agent;
-    private $endpoint;
+    private $basic_endpoint;
+    private $oauth_endpoint;
 
     private $debug;
 
-    public function __construct($auth_type = 'oauth', $username = REDDIT_USERNAME, $password = REDDIT_PASSWORD, $app_id = REDDIT_APP_ID, $app_secret = REDDIT_APP_SECRET, $user_agent = PHAPPER_USER_AGENT, $endpoint = PHAPPER_OAUTH_ENDPOINT) {
-        if ($auth_type == 'oauth') {
-            $this->oauth2 = new OAuth2($username, $password, $app_id, $app_secret, $user_agent);
-            $this->ratelimiter = new RateLimiter(true, 1);
-        } elseif ($auth_type == 'cookie') {
-            return null;
-        }
+    public function __construct($username = null, $password = null, $app_id = null, $app_secret = null, $user_agent = null, $basic_endpoint = null, $oauth_endpoint = null) {
+        $reddit_username = (is_null($username)) ? PhapperConfig::$username : $username;
+        $reddit_password = (is_null($password)) ? PhapperConfig::$password : $password;
+        $reddit_app_id = (is_null($app_id)) ? PhapperConfig::$app_id : $app_id;
+        $reddit_app_secret = (is_null($app_secret)) ? PhapperConfig::$app_secret : $app_secret;
+        $phapper_user_agent = (is_null($user_agent)) ? PhapperConfig::$user_agent : $user_agent;
+        $reddit_basic_endpoint = (is_null($basic_endpoint)) ? PhapperConfig::$basic_endpoint : $basic_endpoint;
+        $reddit_oauth_endpoint = (is_null($oauth_endpoint)) ? PhapperConfig::$oauth_endpoint : $oauth_endpoint;
 
-        $this->user_agent = $user_agent;
-        $this->endpoint = $endpoint;
+        $this->oauth2 = new OAuth2($reddit_username, $reddit_password, $reddit_app_id, $reddit_app_secret, $phapper_user_agent);
+        $this->ratelimiter = new RateLimiter(true, 1);
+        $this->user_agent = $phapper_user_agent;
+        $this->basic_endpoint = $reddit_basic_endpoint;
+        $this->oauth_endpoint = $reddit_oauth_endpoint;
         $this->debug = false;
     }
 
@@ -3371,7 +3376,7 @@ class Phapper {
     //-----------------------------------------
     public function apiCall($path, $method = 'GET', $params = null, $json = false) {
         //Prepare request URL
-        $url = $this->endpoint.$path;
+        $url = $this->oauth_endpoint.$path;
 
         //Obtain access token for authentication
         $token = $this->oauth2->getAccessToken();
@@ -3439,7 +3444,7 @@ class Phapper {
     private function getCaptchaResponse($iden) {
         fwrite(STDERR, "\n==============================================================================\n");
         fwrite(STDERR, "CAPTCHA REQUIRED!\nPlease visit this link and type in the letters you see in the picture.\n\n");
-        fwrite(STDERR, PHAPPER_BASIC_ENDPOINT."/captcha/$iden\n");
+        fwrite(STDERR, "{$this->basic_endpoint}/captcha/$iden\n");
         fwrite(STDERR, "\n(Too hard? Leave blank to request another. To skip this command, type 'skip'.)");
         fwrite(STDERR, "\n==============================================================================\n");
         $answer = readline("Response: ");

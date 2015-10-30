@@ -1,12 +1,16 @@
 <?php
 
+// Rename this file to config.php, then fill in the blank values.
+
 namespace Phapper;
 
-define('REDDIT_USERNAME',   '');
-define('REDDIT_PASSWORD',   '');
-define('REDDIT_APP_ID',     '');
-define('REDDIT_APP_SECRET', '');
-define('PHAPPER_USER_AGENT','[YOUR SCRIPT PURPOSE HERE] by /u/[YOUR USERNAME HERE] (Phapper 1.0)');
+class PhapperConfig {
+    public static $username     = '';
+    public static $password     = '';
+    public static $app_id       = '';
+    public static $app_secret   = '';
+    public static $user_agent   = '[YOUR SCRIPT PURPOSE HERE] by /u/[YOUR USERNAME HERE] (Phapper 1.0)';
 
-define('PHAPPER_OAUTH_ENDPOINT',    'https://oauth.reddit.com');
-define('PHAPPER_BASIC_ENDPOINT',    'https://www.reddit.com');
+    public static $oauth_endpoint = 'https://oauth.reddit.com';
+    public static $basic_endpoint = 'https://www.reddit.com';
+}
