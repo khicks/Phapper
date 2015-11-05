@@ -44,8 +44,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-#project = u''
-#copyright = unicode(datetime.utcnow().year) + u','
+project = u'Phapper'
+copyright = unicode(datetime.utcnow().year) + u', rotorcowboy'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
