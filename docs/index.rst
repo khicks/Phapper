@@ -9,4 +9,5 @@ Welcome to Phapper
     :maxdepth: 2
     :caption: Phapper Pheatures
 
+    gettingstarted
     ratelimiter
