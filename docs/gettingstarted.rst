@@ -3,7 +3,7 @@ Getting Started
 
 To start using Phapper, download the `Phapper files from GitHub <https://github.com/rotorcowboy/Phapper>`_. You can either download the ZIP file and extract it yourself or do a git clone:
 
-.. code-block::
+.. code-block:: bash
 
     $ git clone git@github.com:rotorcowboy/Phapper.git
 
