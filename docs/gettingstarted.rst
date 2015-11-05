@@ -21,3 +21,20 @@ Then, you can start creating your script. Create a new file in the ``Phapper/`` 
     $r = new \Phapper\Phapper();
 
 Congratulations! You're ready to start using Phapper! We will be performing reddit operations with the ``$r`` object throughout this documentation, but you can name it anything you like.
+
+Debugging
+---------
+
+All Phapper functions will return something when called, whether or not the result of the corresponding reddit API call is of any use or substance. To obtain the result of any function call, you can use ``var_dump`` on it,  like:
+
+.. code-block:: php
+
+    var_dump($r->getMe());
+
+Additionally, you can set Phapper to output the URL of any reddit API call by enabling debug mode:
+
+.. code-block:: php
+
+    $r->setDebug(true);
+
+You can turn this off by setting debug to ``false``.
