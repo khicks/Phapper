@@ -2,10 +2,10 @@
 
 namespace Phapper;
 
-require_once('config.php');
-require_once('inc/oauth2.php');
-require_once('inc/ratelimiter.php');
-require_once('inc/live.php');
+require_once(__DIR__.'/../config.php');
+require_once(__DIR__.'/inc/oauth2.php');
+require_once(__DIR__.'/inc/ratelimiter.php');
+require_once(__DIR__.'/inc/live.php');
 
 
 class Phapper {
@@ -31,7 +31,7 @@ class Phapper {
         $reddit_basic_endpoint = (is_null($basic_endpoint)) ? PhapperConfig::$basic_endpoint : $basic_endpoint;
         $reddit_oauth_endpoint = (is_null($oauth_endpoint)) ? PhapperConfig::$oauth_endpoint : $oauth_endpoint;
 
-        $this->oauth2 = new OAuth2($reddit_username, $reddit_password, $reddit_app_id, $reddit_app_secret, $phapper_user_agent);
+        $this->oauth2 = new OAuth2($reddit_username, $reddit_password, $reddit_app_id, $reddit_app_secret, $phapper_user_agent, $reddit_basic_endpoint);
         $this->ratelimiter = new RateLimiter(true, 1);
         $this->user_agent = $phapper_user_agent;
         $this->basic_endpoint = $reddit_basic_endpoint;
