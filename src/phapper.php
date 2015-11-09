@@ -3383,8 +3383,8 @@ class Phapper {
 
         //Prepare cURL options
         $options[CURLOPT_RETURNTRANSFER] = true;
-        $options[CURLOPT_CONNECTTIMEOUT] = 5;
-        $options[CURLOPT_TIMEOUT] = 10;
+        $options[CURLOPT_CONNECTTIMEOUT] = 10;
+        $options[CURLOPT_TIMEOUT] = 30;
         $options[CURLOPT_USERAGENT] = $this->user_agent;
         $options[CURLOPT_CUSTOMREQUEST] = $method;
         $options[CURLOPT_HTTPHEADER][] = "Authorization: ".$token['token_type']." ".$token['access_token'];
