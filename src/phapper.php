@@ -783,7 +783,7 @@ class Phapper {
             return null;
         }
 
-        return $response->data;
+        return $response;
     }
 
     /**
@@ -1314,7 +1314,7 @@ class Phapper {
 
         $response = $this->apiCall("/r/$subreddit/about/log.json", 'GET', $params);
 
-        return $response->data;
+        return $response;
     }
 
     /**

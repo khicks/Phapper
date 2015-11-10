@@ -1,7 +1,7 @@
 Getting Started
 ===============
 
-To start using Phapper, go to your `apps page in reddit's preferences <https://www.reddit.com/prefs/apps/>`_ and create a new app. Name it anything you like, set the type to "script", and give it any redirect URI you wish (``https://www.reddit.com`` will work). A redirect URI is required, but not used with Phapper. Take note of the app ID underneath "personal use script" and the app secret. You will need those for the configuration file.
+To start using Phapper, go to your `apps page in reddit's preferences <https://www.reddit.com/prefs/apps/>`_ and create a new app. Name it anything you like, set the type to "script", and give it any redirect URI you wish (``https://www.reddit.com`` will work). A redirect URI is required by reddit, but not used with Phapper. Take note of the app ID underneath "personal use script" and the app secret. You will need those for the configuration file.
 
 Next, download the `Phapper files from GitHub <https://github.com/rotorcowboy/Phapper>`_. You can either download the ZIP file and extract it yourself or do a git clone:
 
