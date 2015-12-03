@@ -2305,13 +2305,10 @@ class Phapper {
      * This function does not use pagination, but it's here anyway in case that's changed in the future.
      * @param string $subreddit Subreddit for which to retrieve moderators.
      * @param string|null $user Jump to a specific user. Will return an empty list if user is not on list.
-     * @param int $limit Upper limit of number of items to retrieve. Maximum is 100.
-     * @param string|null $after Get items lower on list than this entry. Does not mean chronologically.
-     * @param string|null $before Get items higher on list than this entry. Does not mean chronologically.
      * @return object Listing of users.
      */
-    public function getModerators($subreddit, $user = null, $limit = 25, $after = null, $before = null) {
-        return $this->getSubredditUsers('moderators', $subreddit, $user, $limit, $after, $before);
+    public function getModerators($subreddit, $user = null) {
+        return $this->getSubredditUsers('moderators', $subreddit, $user, null, null, null);
     }
 
     /**
