@@ -1,6 +1,5 @@
 <?php
 
-require_once(__DIR__.'/../config.php');
 require_once(__DIR__.'/inc/oauth2.php');
 require_once(__DIR__.'/inc/ratelimiter.php');
 require_once(__DIR__.'/inc/live.php');
@@ -22,6 +21,10 @@ class Phapper {
     private $debug;
 
     public function __construct($username = null, $password = null, $app_id = null, $app_secret = null, $user_agent = null, $basic_endpoint = null, $oauth_endpoint = null) {
+        if (file_exists(__DIR__.'/../config.php')) {
+            include_once(__DIR__.'/../config.php');
+        }
+
         $reddit_username = (is_null($username)) ? PhapperConfig::$username : $username;
         $reddit_password = (is_null($password)) ? PhapperConfig::$password : $password;
         $reddit_app_id = (is_null($app_id)) ? PhapperConfig::$app_id : $app_id;
@@ -2094,8 +2097,6 @@ class Phapper {
             $model['key_color'] = $key_color;
         }
 
-        var_dump($model);
-
         $params['model'] = json_encode($model);
 
         return $this->apiCall("/api/multi/user/{$this->oauth2->username}/m/$name", 'PUT', $params);
@@ -2851,9 +2852,6 @@ class Phapper {
                 $value = ($value) ? 'true' : 'false';
             }
         }
-
-        var_dump($subreddit_info);
-        var_dump($subreddit_settings);
 
         return $this->apiCall("/api/site_admin", 'POST', $params);
     }
