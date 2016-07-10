@@ -18,7 +18,7 @@ Then, you can start creating your script. Create a new file in the ``Phapper/`` 
     <?php
 
     require_once("src/phapper.php");
-    $r = new \Phapper\Phapper();
+    $r = new Phapper();
 
 Congratulations! You're ready to start using Phapper! We will be performing reddit operations with the ``$r`` object throughout this documentation, but you can name it anything you like.
 
