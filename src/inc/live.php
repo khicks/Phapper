@@ -1,9 +1,6 @@
 <?php
 
-namespace Phapper;
-
-
-class Live {
+class PhapperLive {
     /** @var Phapper */
     private $phapper;
     private $thread_id;
@@ -293,7 +290,7 @@ class Live {
             'type' => 'liveupdate_contributor_invite'
         );
 
-        return $this->apicall("/set_contributor_permissions", 'POST', $params);
+        return $this->apiCall("/set_contributor_permissions", 'POST', $params);
     }
 
     /**

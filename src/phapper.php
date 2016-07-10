@@ -1,18 +1,17 @@
 <?php
 
-namespace Phapper;
-
 require_once(__DIR__.'/../config.php');
 require_once(__DIR__.'/inc/oauth2.php');
 require_once(__DIR__.'/inc/ratelimiter.php');
 require_once(__DIR__.'/inc/live.php');
+require_once(__DIR__.'/inc/responseparser.php');
 
 
 class Phapper {
-    /** @var OAuth2 */
+    /** @var PhapperOAuth2 */
     private $oauth2;
 
-    /** @var RateLimiter */
+    /** @var PhapperRateLimiter */
     public $ratelimiter;
 
     private $user_id;
@@ -31,8 +30,8 @@ class Phapper {
         $reddit_basic_endpoint = (is_null($basic_endpoint)) ? PhapperConfig::$basic_endpoint : $basic_endpoint;
         $reddit_oauth_endpoint = (is_null($oauth_endpoint)) ? PhapperConfig::$oauth_endpoint : $oauth_endpoint;
 
-        $this->oauth2 = new OAuth2($reddit_username, $reddit_password, $reddit_app_id, $reddit_app_secret, $phapper_user_agent, $reddit_basic_endpoint);
-        $this->ratelimiter = new RateLimiter(true, 1);
+        $this->oauth2 = new PhapperOAuth2($reddit_username, $reddit_password, $reddit_app_id, $reddit_app_secret, $phapper_user_agent, $reddit_basic_endpoint);
+        $this->ratelimiter = new PhapperRateLimiter(true, 1);
         $this->user_agent = $phapper_user_agent;
         $this->basic_endpoint = $reddit_basic_endpoint;
         $this->oauth_endpoint = $reddit_oauth_endpoint;
@@ -44,7 +43,7 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Account (DONE)
+    // Account
     //-----------------------------------------
     /**
      * Gets information about the current user's account.
@@ -119,7 +118,7 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Flair (DONE)
+    // Flair
     //-----------------------------------------
     /**
      * Retrieves a list of all assigned user flair in the specified subreddit. Must be a mod of that subreddit.
@@ -401,7 +400,7 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Links & comments (DONE)
+    // Links & comments
     //-----------------------------------------
     /**
      * Submits a new link post.
@@ -755,7 +754,7 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Listings (DONE)
+    // Listings
     //-----------------------------------------
     /**
      * Private function to unify process of retrieving several subreddit listings.
@@ -943,7 +942,7 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Live threads (DONE)
+    // Live threads
     //-----------------------------------------
     /**
      * Creates a new live thread. To use an existing one, use attachLiveThread().
@@ -951,7 +950,7 @@ class Phapper {
      * @param string|null $description The thread's description.
      * @param string|null $resources The thread's resources section in the sidebar.
      * @param bool $nsfw Whether or not the thread is NSFW. Prompts guests to continue when visiting.
-     * @return Live|null New PHP object representing a reddit live thread.
+     * @return PhapperLive|null New PHP object representing a reddit live thread.
      */
     public function createLiveThread($title, $description = null, $resources = null, $nsfw = false) {
         $params = array(
@@ -965,7 +964,7 @@ class Phapper {
         $response = $this->apiCall('/api/live/create', 'POST', $params);
 
         if (isset($response->json->data->id)) {
-            return new Live($this, $response->json->data->id);
+            return new PhapperLive($this, $response->json->data->id);
         }
         return null;
     }
@@ -973,14 +972,14 @@ class Phapper {
     /**
      * Uses an existing live thread to create a Live object. You do not necessarily need to be a contributor to attach.
      * @param string $thread_id Thread ID of the thread to attach.
-     * @return Live Returns the resulting PHP Live object.
+     * @return PhapperLive Returns the resulting PHP Live object.
      */
     public function attachLiveThread($thread_id) {
-        return new Live($this, $thread_id);
+        return new PhapperLive($this, $thread_id);
     }
 
     //-----------------------------------------
-    // Private messages (DONE)
+    // Private messages
     //-----------------------------------------
     /**
      * Block a user based on the thing ID of a *message* they sent you. Does not work directly on user objects.
@@ -1049,6 +1048,20 @@ class Phapper {
         );
 
         return $this->apiCall("/api/compose", 'POST', $params);
+    }
+
+    /**
+     * Deletes a message from the recipient's inbox.
+     * Be aware that messages sent both from and to yourself cannot be deleted.
+     * @param $thing_id string Thing ID of message to delete.
+     * @return mixed Response to API call.
+     */
+    public function deleteMessage($thing_id) {
+        $params = array(
+            'id' => $thing_id
+        );
+        
+        return $this->apiCall("/api/del_msg", 'POST', $params);
     }
 
     /**
@@ -1183,7 +1196,7 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Misc (DONE)
+    // Misc
     //-----------------------------------------
     /**
      * Retrieve a list of all of reddit's OAuth2 scopes.
@@ -1194,7 +1207,7 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Moderation (DONE)
+    // Moderation
     //-----------------------------------------
     /**
      * Toggles contest mode on a post.
@@ -1928,7 +1941,7 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Multis (DONE)
+    // Multis
     //-----------------------------------------
     /**
      * Copy an existing multireddit to your own set.
@@ -2157,7 +2170,7 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Search (DONE)
+    // Search
     //-----------------------------------------
     /**
      * Perform a search query.
@@ -2846,7 +2859,7 @@ class Phapper {
     }
 
     //-----------------------------------------
-    // Users (DONE)
+    // Users
     //-----------------------------------------
     /**
      * Adds the specified user as a friend.

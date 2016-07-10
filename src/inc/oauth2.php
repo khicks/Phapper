@@ -1,9 +1,6 @@
 <?php
 
-namespace Phapper;
-
-
-class OAuth2 {
+class PhapperOAuth2 {
     private $access_token;
     private $token_type;
     private $expiration;

@@ -1,8 +1,6 @@
 <?php
 
-namespace Phapper;
-
-class RateLimiter {
+class PhapperRateLimiter {
     private $enabled;
     private $interval;
     private $last_request;
